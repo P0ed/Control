@@ -5,10 +5,11 @@ final class BLETransmitter {
 
 	struct Service {
 		var peripheral: CBPeripheral
-		var clock: CBCharacteristic
+		var clockBPM: CBCharacteristic
 		var pattern: CBCharacteristic
 		var valueA: CBCharacteristic
 		var valueB: CBCharacteristic
+		var controls: CBCharacteristic
 	}
 
 	private let lifetime: Cancellable
@@ -50,7 +51,7 @@ final class BLETransmitter {
 
 		pd.didDiscoverServices = { p, e in
 			print("didDiscoverServices \(p.services ?? [])")
-			try? p.discoverCharacteristics([.clock, .pattern, .valueA, .valueB], for: unwrap(p.services?.first))
+			try? p.discoverCharacteristics([.clockBPM, .pattern, .valueA, .valueB], for: unwrap(p.services?.first))
 		}
 		pd.didDiscoverCharacteristicsFor = { [_service] p, s, e in
 			print("didDiscoverCharacteristics \(s.characteristics ?? [])")
@@ -62,7 +63,7 @@ final class BLETransmitter {
 	}
 
 	func setClock(_ clock: Float) {
-		service?.write(value: clock, for: \.clock)
+		service?.write(value: clock, for: \.clockBPM)
 	}
 	func setPattern(_ pattern: Int16) {
 		service?.write(value: pattern, for: \.pattern)
@@ -73,6 +74,9 @@ final class BLETransmitter {
 	func setValueB(_ value: Float) {
 		service?.write(value: value, for: \.valueB)
 	}
+	func setControls(_ value: Int16) {
+		service?.write(value: value, for: \.controls)
+	}
 }
 
 extension BLETransmitter.Service {
@@ -82,10 +86,11 @@ extension BLETransmitter.Service {
 		}
 		self = try BLETransmitter.Service(
 			peripheral: peripheral,
-			clock: find(.clock),
+			clockBPM: find(.clockBPM),
 			pattern: find(.pattern),
 			valueA: find(.valueA),
-			valueB: find(.valueB)
+			valueB: find(.valueB),
+			controls: find(.controls)
 		)
 	}
 

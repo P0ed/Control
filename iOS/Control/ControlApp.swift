@@ -9,7 +9,6 @@ struct ControlApp: App {
 	var body: some Scene {
 		WindowGroup {
 			ContentView(
-				clock: nil,
 				transmitter: transmitter,
 				controller: controller
 			)

@@ -39,19 +39,16 @@ final class BLETransmitter {
 		}
 
 		cmd.didUpdateState = { [scan] cm in
-			print("didUpdateState: \(cm.state.rawValue)")
 			guard cm.state == .poweredOn else { return print("Central is not powered on") }
 			scan()
 		}
 		cmd.didDiscover = { cm, p, data, rssi in
-			print("didDiscover \(p)")
 			cm.stopScan()
 			p.delegate = pd
 			cm.connect(p, options: nil)
 			peripheral = p
 		}
 		cmd.didConnect = { cm, p in
-			print("Connected")
 			p.discoverServices(nil)
 		}
 		cmd.didDisconnect = { cm, p, e in
@@ -59,19 +56,15 @@ final class BLETransmitter {
 		}
 
 		pd.didDiscoverServices = { p, e in
-			print("didDiscoverServices \(p.services ?? [])")
 			try? p.discoverCharacteristics(nil, for: unwrap(p.services?.first))
 		}
 		pd.didDiscoverCharacteristicsFor = { [_service] p, s, e in
-			print("didDiscoverCharacteristics \(s.characteristics ?? [])")
 			_service.value = try? BLETransmitter.Service(
 				peripheral: p,
 				characteristics: s.characteristics ?? []
 			)
 		}
-		pd.didWriteValue = { p, c, e in
-			print("didWriteValue \(e as Any)")
-		}
+		pd.didWriteValue = { p, c, e in }
 	}
 }
 
@@ -107,7 +100,7 @@ extension BLETransmitter.Service {
 	func setValueB(_ value: Float) {
 		write(value: value, for: \.valueB)
 	}
-	func setControls(_ value: Int16) {
+	func setControls(_ value: BLEControls) {
 		write(value: value, for: \.controls)
 	}
 }

@@ -7,10 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5F71458C26597DBA00A73D7F /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F71458B26597DBA00A73D7F /* GameController.framework */; };
+		5F71458F265980B000A73D7F /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F71458E265980B000A73D7F /* Model.swift */; };
 		5FE9D270265437F300B217CA /* BLEUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE9D26F265437F300B217CA /* BLEUUID.swift */; };
 		5FE9D2732654381C00B217CA /* BLEDelegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE9D2722654381C00B217CA /* BLEDelegates.swift */; };
 		5FF16EA22642FD090045503F /* ControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16EA12642FD090045503F /* ControlApp.swift */; };
-		5FF16EA42642FD090045503F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16EA32642FD090045503F /* ContentView.swift */; };
+		5FF16EA42642FD090045503F /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16EA32642FD090045503F /* MainView.swift */; };
 		5FF16EA62642FD0B0045503F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5FF16EA52642FD0B0045503F /* Assets.xcassets */; };
 		5FF16EA92642FD0B0045503F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5FF16EA82642FD0B0045503F /* Preview Assets.xcassets */; };
 		5FF16ED52642FD830045503F /* FnFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16EB32642FD830045503F /* FnFunctions.swift */; };
@@ -48,11 +50,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5F71458B26597DBA00A73D7F /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+		5F71458E265980B000A73D7F /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		5FE9D26F265437F300B217CA /* BLEUUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEUUID.swift; sourceTree = "<group>"; };
 		5FE9D2722654381C00B217CA /* BLEDelegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEDelegates.swift; sourceTree = "<group>"; };
 		5FF16E9E2642FD090045503F /* Control.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Control.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FF16EA12642FD090045503F /* ControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlApp.swift; sourceTree = "<group>"; };
-		5FF16EA32642FD090045503F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		5FF16EA32642FD090045503F /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		5FF16EA52642FD0B0045503F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5FF16EA82642FD0B0045503F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		5FF16EAA2642FD0B0045503F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -95,12 +99,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5F71458C26597DBA00A73D7F /* GameController.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5F71458A26597DB900A73D7F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5F71458B26597DBA00A73D7F /* GameController.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		5FE9D27726545FAD00B217CA /* BLE */ = {
 			isa = PBXGroup;
 			children = (
@@ -116,6 +129,7 @@
 			children = (
 				5FF16EA02642FD090045503F /* Control */,
 				5FF16E9F2642FD090045503F /* Products */,
+				5F71458A26597DB900A73D7F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -133,7 +147,8 @@
 				5FF16EB12642FD650045503F /* Fx */,
 				5FE9D27726545FAD00B217CA /* BLE */,
 				5FF16EA12642FD090045503F /* ControlApp.swift */,
-				5FF16EA32642FD090045503F /* ContentView.swift */,
+				5FF16EA32642FD090045503F /* MainView.swift */,
+				5F71458E265980B000A73D7F /* Model.swift */,
 				5FF16F0026433BA20045503F /* Controller.swift */,
 				5FF16EF2264301140045503F /* MIDIReceiver.swift */,
 				5FF16EFB264304DF0045503F /* Utils.swift */,
@@ -323,9 +338,10 @@
 				5FF16EEC2642FD830045503F /* PromiseOperations.swift in Sources */,
 				5FF16EF02642FD830045503F /* Semigroup+Monoid.swift in Sources */,
 				5FE9D2732654381C00B217CA /* BLEDelegates.swift in Sources */,
+				5F71458F265980B000A73D7F /* Model.swift in Sources */,
 				5FF16EE52642FD830045503F /* NotificationCenter.swift in Sources */,
 				5FF16EEE2642FD830045503F /* Operators.swift in Sources */,
-				5FF16EA42642FD090045503F /* ContentView.swift in Sources */,
+				5FF16EA42642FD090045503F /* MainView.swift in Sources */,
 				5FF16EA22642FD090045503F /* ControlApp.swift in Sources */,
 				5FF16EE72642FD830045503F /* Timer.swift in Sources */,
 				5FF16EE12642FD830045503F /* SignalType.swift in Sources */,

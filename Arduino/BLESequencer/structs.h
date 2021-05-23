@@ -1,5 +1,6 @@
 struct Pattern {
-  short bits;
+  unsigned char count;
+  long long bits;
 
   const static struct Pattern straight;
 

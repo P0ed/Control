@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		5F71458C26597DBA00A73D7F /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F71458B26597DBA00A73D7F /* GameController.framework */; };
 		5F71458F265980B000A73D7F /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F71458E265980B000A73D7F /* Model.swift */; };
+		5F714595265A646100A73D7F /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F714594265A646100A73D7F /* Data.swift */; };
+		5F714599265A683A00A73D7F /* PatternView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F714598265A683A00A73D7F /* PatternView.swift */; };
+		5FD6D72E265A81D0000B9801 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD6D72D265A81D0000B9801 /* Controls.swift */; };
 		5FE9D270265437F300B217CA /* BLEUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE9D26F265437F300B217CA /* BLEUUID.swift */; };
 		5FE9D2732654381C00B217CA /* BLEDelegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE9D2722654381C00B217CA /* BLEDelegates.swift */; };
 		5FF16EA22642FD090045503F /* ControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16EA12642FD090045503F /* ControlApp.swift */; };
@@ -43,7 +46,6 @@
 		5FF16EEE2642FD830045503F /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16ED12642FD830045503F /* Operators.swift */; };
 		5FF16EEF2642FD830045503F /* Application+Composition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16ED22642FD830045503F /* Application+Composition.swift */; };
 		5FF16EF02642FD830045503F /* Semigroup+Monoid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16ED42642FD830045503F /* Semigroup+Monoid.swift */; };
-		5FF16EF3264301140045503F /* MIDIReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16EF2264301140045503F /* MIDIReceiver.swift */; };
 		5FF16EF62643015A0045503F /* BLETransmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16EF52643015A0045503F /* BLETransmitter.swift */; };
 		5FF16EFC264304DF0045503F /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16EFB264304DF0045503F /* Utils.swift */; };
 		5FF16F0126433BA20045503F /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF16F0026433BA20045503F /* Controller.swift */; };
@@ -52,6 +54,9 @@
 /* Begin PBXFileReference section */
 		5F71458B26597DBA00A73D7F /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		5F71458E265980B000A73D7F /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
+		5F714594265A646100A73D7F /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		5F714598265A683A00A73D7F /* PatternView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternView.swift; sourceTree = "<group>"; };
+		5FD6D72D265A81D0000B9801 /* Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
 		5FE9D26F265437F300B217CA /* BLEUUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEUUID.swift; sourceTree = "<group>"; };
 		5FE9D2722654381C00B217CA /* BLEDelegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEDelegates.swift; sourceTree = "<group>"; };
 		5FF16E9E2642FD090045503F /* Control.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Control.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -88,7 +93,6 @@
 		5FF16ED12642FD830045503F /* Operators.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Operators.swift; sourceTree = "<group>"; };
 		5FF16ED22642FD830045503F /* Application+Composition.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Application+Composition.swift"; sourceTree = "<group>"; };
 		5FF16ED42642FD830045503F /* Semigroup+Monoid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Semigroup+Monoid.swift"; sourceTree = "<group>"; };
-		5FF16EF2264301140045503F /* MIDIReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIReceiver.swift; sourceTree = "<group>"; };
 		5FF16EF52643015A0045503F /* BLETransmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLETransmitter.swift; sourceTree = "<group>"; };
 		5FF16EFB264304DF0045503F /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		5FF16F0026433BA20045503F /* Controller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
@@ -114,6 +118,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		5F71459B265A685F00A73D7F /* Gamepad Controller */ = {
+			isa = PBXGroup;
+			children = (
+				5FF16F0026433BA20045503F /* Controller.swift */,
+				5FD6D72D265A81D0000B9801 /* Controls.swift */,
+			);
+			path = "Gamepad Controller";
+			sourceTree = "<group>";
+		};
 		5FE9D27726545FAD00B217CA /* BLE */ = {
 			isa = PBXGroup;
 			children = (
@@ -128,7 +141,6 @@
 			isa = PBXGroup;
 			children = (
 				5FF16EA02642FD090045503F /* Control */,
-				5FF16E9F2642FD090045503F /* Products */,
 				5F71458A26597DB900A73D7F /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -139,21 +151,24 @@
 				5FF16E9E2642FD090045503F /* Control.app */,
 			);
 			name = Products;
+			path = ..;
 			sourceTree = "<group>";
 		};
 		5FF16EA02642FD090045503F /* Control */ = {
 			isa = PBXGroup;
 			children = (
 				5FF16EB12642FD650045503F /* Fx */,
+				5F71459B265A685F00A73D7F /* Gamepad Controller */,
 				5FE9D27726545FAD00B217CA /* BLE */,
 				5FF16EA12642FD090045503F /* ControlApp.swift */,
-				5FF16EA32642FD090045503F /* MainView.swift */,
 				5F71458E265980B000A73D7F /* Model.swift */,
-				5FF16F0026433BA20045503F /* Controller.swift */,
-				5FF16EF2264301140045503F /* MIDIReceiver.swift */,
+				5FF16EA32642FD090045503F /* MainView.swift */,
+				5F714598265A683A00A73D7F /* PatternView.swift */,
+				5F714594265A646100A73D7F /* Data.swift */,
 				5FF16EFB264304DF0045503F /* Utils.swift */,
 				5FF16EA52642FD0B0045503F /* Assets.xcassets */,
 				5FF16EAA2642FD0B0045503F /* Info.plist */,
+				5FF16E9F2642FD090045503F /* Products */,
 				5FF16EA72642FD0B0045503F /* Preview Content */,
 			);
 			path = Control;
@@ -337,6 +352,7 @@
 				5FF16ED52642FD830045503F /* FnFunctions.swift in Sources */,
 				5FF16EEC2642FD830045503F /* PromiseOperations.swift in Sources */,
 				5FF16EF02642FD830045503F /* Semigroup+Monoid.swift in Sources */,
+				5FD6D72E265A81D0000B9801 /* Controls.swift in Sources */,
 				5FE9D2732654381C00B217CA /* BLEDelegates.swift in Sources */,
 				5F71458F265980B000A73D7F /* Model.swift in Sources */,
 				5FF16EE52642FD830045503F /* NotificationCenter.swift in Sources */,
@@ -347,12 +363,12 @@
 				5FF16EE12642FD830045503F /* SignalType.swift in Sources */,
 				5FF16EE02642FD830045503F /* SignalPipe.swift in Sources */,
 				5FF16EDE2642FD830045503F /* Weak.swift in Sources */,
-				5FF16EF3264301140045503F /* MIDIReceiver.swift in Sources */,
 				5FF16EDF2642FD830045503F /* Property.swift in Sources */,
 				5FF16ED62642FD830045503F /* Functions.swift in Sources */,
 				5FF16ED92642FD830045503F /* ExecutionContext.swift in Sources */,
 				5FF16EE42642FD830045503F /* Signal.swift in Sources */,
 				5FF16F0126433BA20045503F /* Controller.swift in Sources */,
+				5F714599265A683A00A73D7F /* PatternView.swift in Sources */,
 				5FF16EDD2642FD830045503F /* Errors.swift in Sources */,
 				5FF16EDC2642FD830045503F /* Closures.swift in Sources */,
 				5FF16EDA2642FD830045503F /* Bag.swift in Sources */,
@@ -362,6 +378,7 @@
 				5FF16ED72642FD830045503F /* Weakify.swift in Sources */,
 				5FF16EFC264304DF0045503F /* Utils.swift in Sources */,
 				5FF16EE92642FD830045503F /* Bool.swift in Sources */,
+				5F714595265A646100A73D7F /* Data.swift in Sources */,
 				5FF16EEA2642FD830045503F /* Optional.swift in Sources */,
 				5FF16EF62643015A0045503F /* BLETransmitter.swift in Sources */,
 			);

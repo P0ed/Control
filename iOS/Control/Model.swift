@@ -112,12 +112,12 @@ final class Model: ObservableObject {
 	}
 
 	private func movePendingIndex(direction: Direction) {
-		guard let idx = pendingIndex else { return }
+		guard let idx = pendingIndex, let pattern = pendingPattern else { return }
 		switch direction {
-		case .up: pendingIndex = (64 + idx - 8) % 64
-		case .right: pendingIndex = (idx + 1) % 64
-		case .down: pendingIndex = (idx + 8) % 64
-		case .left: pendingIndex = (64 + idx - 1) % 64
+		case .up: pendingIndex = ((8 * pattern.rows) + idx - 8) % (8 * pattern.rows)
+		case .right: pendingIndex = (idx % 8 + 1) % pattern.cols + (idx / 8) * 8
+		case .down: pendingIndex = (idx + 8) % (8 * pattern.rows)
+		case .left: pendingIndex = ((pattern.cols + idx % 8 - 1) % pattern.cols) + (idx / 8) * 8
 		}
 	}
 }

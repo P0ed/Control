@@ -105,7 +105,7 @@ struct BLEPattern {
 }
 
 extension Pattern {
-	static let techno = Pattern(bits: 0b0001000100010001 as UInt16)
-	static let trance = Pattern(bits: 0b0111011101110111 as UInt16)
-	static let empty = Pattern(rows: 8, cols: 8, bits: 0b111)
+	static let techno = Pattern(bits: 0b0001_0001_0001_0001 as UInt16)
+	static let trance = Pattern(bits: 0b0111_0111_0111_0111 as UInt16)
+	static let empty = Pattern(bits: 0 as UInt16)
 }

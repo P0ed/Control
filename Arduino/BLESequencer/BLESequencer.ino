@@ -6,8 +6,8 @@ State state = {
   .lastTick = 0,
   .clockBPM = 0,
   .idx = 0,
-  .pattern = Pattern::straight,
-  .nextPattern = Pattern::straight,
+  .pattern = Pattern::empty,
+  .nextPattern = Pattern::empty,
   .valueA = 0,
   .valueB = 0,
   .controls = {0}
@@ -27,30 +27,40 @@ void setup() {
 }
 
 void loop() {
-  runClockIfNeeded();
-  setPWM(state.valueA, state.valueB);
+  const unsigned long clock = millis();
+  runClockIfNeeded(clock);
+
+  static const auto pi = acos(-1);
+  static const float am = state.valueB;
+  static const float fm = 1;
+  static const float acA = sin(clock / oneTick() / pi / fm) * am;
+  setPWM(state.valueA + acA, state.valueB);
+  
   loopBLE();
 }
 
-void runClockIfNeeded() {
-  if (state.clockBPM) {
-    const unsigned long nextTick = state.lastTick + 60 * 1000 / state.clockBPM / 8;
-    const unsigned long clock = millis();
+float oneTick() {
+  return 60 * 1000 / state.clockBPM / 8;
+}
+
+void runClockIfNeeded(const unsigned long clock) {
+  if (state.clockBPM && state.controls & Controls::run) {
+    const unsigned long nextTick = state.lastTick + oneTick();
 
     if (clock > nextTick) {
       state.lastTick = clock;
-      if (state.idx == 0) {
+      if (state.idx == 0 || (state.controls & Controls::changePattern)) {
         state.pattern = state.nextPattern;
       }
 
       const bool isMuted = state.controls & Controls::mute;
       const bool patternValue = state.pattern.isHighAtIndex(state.idx / 2);
-      
+
       digitalWrite(LED_BUILTIN, state.idx % 2 ? HIGH : LOW);
       digitalWrite(D6, state.idx % 2 ? HIGH : LOW);
       digitalWrite(D5, patternValue && !isMuted ? HIGH : LOW);
 
-      state.idx = (state.idx + 1) % 32;
+      state.idx = (state.idx + 1) % state.pattern.count * 2;
     }
   } else {
     state.lastTick = 0;
@@ -79,8 +89,4 @@ void didChangeValueB(BLEDevice central, BLECharacteristic characteristic) {
 
 void didChangeControls(BLEDevice central, BLECharacteristic characteristic) {
   memcpy(&state.controls, (unsigned char*)characteristic.value(), characteristic.valueSize());
-
-  if (state.controls & Controls::nextPattern) {
-    state.pattern = state.nextPattern;
-  }
 }

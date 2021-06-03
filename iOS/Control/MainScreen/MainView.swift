@@ -14,7 +14,7 @@ struct MainView: View {
 				)
 				Text("\(String(format: "%.1f", model.state.bpm))")
 					.font(.system(.largeTitle, design: .monospaced))
-					.foregroundColor(model.state.bpm == 0 ? .clear : .text)
+					.foregroundColor(model.state.bpm == 0 || !model.bleControls.contains(.run) ? .clear : .text)
 				VStack {
 					HStack {
 						signedByteText(model.controls.leftTrigger, .trailing)

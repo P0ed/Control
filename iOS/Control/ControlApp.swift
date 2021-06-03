@@ -1,9 +1,10 @@
 import SwiftUI
+import Combine
 
 @main
 struct ControlApp: App {
-	let transmitter = BLETransmitter()
-	let controller = Controller()
+	var transmitter = BLETransmitter()
+	var controller = Controller()
 
 	var body: some Scene {
 		WindowGroup {

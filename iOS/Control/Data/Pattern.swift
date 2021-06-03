@@ -1,22 +1,18 @@
 import Foundation
 
-struct Pattern: MutableCollection {
+struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	var rows: Int
 	var cols: Int
 	var bits: UInt64
 
 	var startIndex: Int { 0 }
 	var endIndex: Int { Int(rows * cols) }
-	func index(after i: Int) -> Int { i + 1 }
+	func index(after i: Int) -> Int { (i + 1) % (rows * cols) }
 
 	subscript(position: Int) -> Bool {
 		get { bits & 1 << position != 0 }
 		set { bits = newValue ? bits | 1 << position : bits & ~(1 << position) }
 	}
-}
-
-enum Direction {
-	case up, right, down, left
 }
 
 extension Pattern {
@@ -25,7 +21,8 @@ extension Pattern {
 			rows: 4,
 			cols: 4,
 			bits: (0..<4)
-				.map { row in (Self.mask(range: (row * 4)..<(row * 4 + 4)) & UInt64(bits)) << (row * 4) }
+				.map { $0 * 4 }
+				.map { offset in (Self.mask(range: offset..<(offset + 4)) & UInt64(bits)) << offset }
 				.reduce(0 as UInt64, |)
 		)
 	}
@@ -47,8 +44,9 @@ extension Pattern {
 	}
 	mutating func shiftCols(_ steps: Int) {
 		bits = (0..<rows)
-			.map { row in
-				modify(self) { $0.shift(steps, range: (row * 8)..<(row * 8 + cols)) }.bits & Self.mask(range: (row * 8)..<(row * 8 + cols))
+			.map { $0 * 8 }
+			.map { offset in
+				modify(self) { $0.shift(steps, range: offset..<(offset + cols)) }.bits & Self.mask(range: offset..<(offset + cols))
 			}
 			.reduce(0 as UInt64, |)
 	}
@@ -87,16 +85,12 @@ private extension Pattern {
 	static func mask(range: Range<Int>) -> UInt64 {
 		range.count == 64 ? .max : UInt64((1 << range.count) - 1) << range.lowerBound
 	}
+}
 
-	static func shifted(bits: UInt64, steps: Int, range: Range<Int>) -> UInt64 {
-		print("shift\n\(String(bits, radix: 2))\nsteps: \(steps)\nrange: \(range)")
-		let rangeMask = Self.mask(range: range)
-		print("mask:", String(rangeMask, radix: 2))
-		print("bits << steps:", String(bits << steps, radix: 2))
-		print("bits << steps | rangeMask:", String((bits << steps) & rangeMask, radix: 2))
-		print("result:", String(((bits << steps) & rangeMask) | (bits & ~rangeMask), radix: 2))
-		return ((bits << steps) & rangeMask) | (bits & ~rangeMask)
-	}
+extension Pattern {
+	static let techno = Pattern(bits: 0b0001_0001_0001_0001 as UInt16)
+	static let trance = Pattern(bits: 0b0111_0111_0111_0111 as UInt16)
+	static let empty = Pattern(bits: 0 as UInt16)
 }
 
 struct BLEPattern {
@@ -104,8 +98,6 @@ struct BLEPattern {
 	var bits: UInt64
 }
 
-extension Pattern {
-	static let techno = Pattern(bits: 0b0001_0001_0001_0001 as UInt16)
-	static let trance = Pattern(bits: 0b0111_0111_0111_0111 as UInt16)
-	static let empty = Pattern(bits: 0 as UInt16)
+enum Direction {
+	case up, right, down, left
 }

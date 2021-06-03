@@ -52,8 +52,8 @@ final class Controller {
 			mapControl(gamepad.dpad.right, .right)
 			mapControl(gamepad.leftShoulder, .shiftLeft)
 			mapControl(gamepad.rightShoulder, .shiftRight)
-			mapControl(gamepad.buttonX, .runStop)
-			mapControl(gamepad.buttonY, .pattern)
+			mapControl(gamepad.buttonX, .square)
+			mapControl(gamepad.buttonY, .triangle)
 			mapControl(gamepad.buttonMenu, .scan)
 		}
 

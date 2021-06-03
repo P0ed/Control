@@ -18,8 +18,8 @@ struct Controls {
 		static let shiftRight = Button(rawValue: 1 << 5)
 		static let cross = Button(rawValue: 1 << 6)
 		static let circle = Button(rawValue: 1 << 7)
-		static let runStop = Button(rawValue: 1 << 8)
-		static let pattern = Button(rawValue: 1 << 9)
+		static let square = Button(rawValue: 1 << 8)
+		static let triangle = Button(rawValue: 1 << 9)
 		static let scan = Button(rawValue: 1 << 10)
 
 		static let dPad = Button([.up, .down, .left, .right])
@@ -36,8 +36,10 @@ struct Controls {
 struct BLEControls: OptionSet {
 	var rawValue: Int16 = 0
 
-	static let mute = BLEControls(rawValue: 1 << 0)
-	static let changePattern = BLEControls(rawValue: 1 << 1)
+	static let run = BLEControls(rawValue: 1 << 0)
+	static let reset = BLEControls(rawValue: 1 << 1)
+	static let mute = BLEControls(rawValue: 1 << 2)
+	static let changePattern = BLEControls(rawValue: 1 << 3)
 
 	mutating func set(_ control: BLEControls, pressed: Bool) {
 		if pressed { insert(control) } else { remove(control) }

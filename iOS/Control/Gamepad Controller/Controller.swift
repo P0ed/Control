@@ -39,7 +39,7 @@ final class Controller {
 				_controls.value.rightTrigger = value
 			}
 
-			let mapControl: (GCControllerButtonInput, Controls.Button) -> Void = { button, control in
+			let mapControl: (GCControllerButtonInput, Controls.Buttons) -> Void = { button, control in
 				button.valueChangedHandler = { _, _, pressed in
 					_controls.modify { if pressed { $0.buttons.insert(control) } else { $0.buttons.remove(control) } }
 				}

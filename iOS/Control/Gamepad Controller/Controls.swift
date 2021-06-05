@@ -5,24 +5,24 @@ struct Controls {
 	var rightStick = Thumbstick.zero
 	var leftTrigger = 0 as Float
 	var rightTrigger = 0 as Float
-	var buttons = Button()
+	var buttons = [] as Buttons
 
-	struct Button: OptionSet {
+	struct Buttons: OptionSet {
 		var rawValue: Int16 = 0
 
-		static let up = Button(rawValue: 1 << 0)
-		static let down = Button(rawValue: 1 << 1)
-		static let left = Button(rawValue: 1 << 2)
-		static let right = Button(rawValue: 1 << 3)
-		static let shiftLeft = Button(rawValue: 1 << 4)
-		static let shiftRight = Button(rawValue: 1 << 5)
-		static let cross = Button(rawValue: 1 << 6)
-		static let circle = Button(rawValue: 1 << 7)
-		static let square = Button(rawValue: 1 << 8)
-		static let triangle = Button(rawValue: 1 << 9)
-		static let scan = Button(rawValue: 1 << 10)
+		static let up = Buttons(rawValue: 1 << 0)
+		static let down = Buttons(rawValue: 1 << 1)
+		static let left = Buttons(rawValue: 1 << 2)
+		static let right = Buttons(rawValue: 1 << 3)
+		static let shiftLeft = Buttons(rawValue: 1 << 4)
+		static let shiftRight = Buttons(rawValue: 1 << 5)
+		static let cross = Buttons(rawValue: 1 << 6)
+		static let circle = Buttons(rawValue: 1 << 7)
+		static let square = Buttons(rawValue: 1 << 8)
+		static let triangle = Buttons(rawValue: 1 << 9)
+		static let scan = Buttons(rawValue: 1 << 10)
 
-		static let dPad = Button([.up, .down, .left, .right])
+		static let dPad = Buttons([.up, .down, .left, .right])
 	}
 
 	struct Thumbstick {
@@ -46,7 +46,7 @@ struct BLEControls: OptionSet {
 	}
 }
 
-extension Controls.Button {
+extension Controls.Buttons {
 	var dPadDirection: Direction? {
 		if contains(.up) { return .up }
 		if contains(.right) { return .right }
@@ -54,4 +54,19 @@ extension Controls.Button {
 		if contains(.left) { return .left }
 		return .none
 	}
+}
+
+extension LFO {
+	init(stick: Controls.Thumbstick, trigger: Float) {
+		self = LFO(
+			offset: UInt8(min(max(stick.x, 0), 1) * 255),
+			am: UInt8(min(max(stick.y, 0), 1) * 255),
+			fm: UInt8(min(max(trigger, 0), 1) * 255)
+		)
+	}
+}
+
+extension Controls {
+	var lfoA: LFO { LFO(stick: leftStick, trigger: leftTrigger) }
+	var lfoB: LFO { LFO(stick: rightStick, trigger: rightTrigger) }
 }

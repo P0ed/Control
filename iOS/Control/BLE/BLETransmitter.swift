@@ -94,10 +94,10 @@ extension BLETransmitter.Service {
 	func setPattern(_ pattern: BLEPattern) {
 		write(value: pattern, for: \.pattern)
 	}
-	func setValueA(_ value: Float) {
+	func setValueA(_ value: LFO) {
 		write(value: value, for: \.valueA)
 	}
-	func setValueB(_ value: Float) {
+	func setValueB(_ value: LFO) {
 		write(value: value, for: \.valueB)
 	}
 	func setControls(_ value: BLEControls) {

@@ -93,11 +93,17 @@ extension Pattern {
 	static let empty = Pattern(bits: 0 as UInt16)
 }
 
-struct BLEPattern {
+struct BLEPattern: Equatable {
 	var count: UInt8
 	var bits: UInt64
 }
 
 enum Direction {
 	case up, right, down, left
+}
+
+struct LFO: Equatable {
+	var offset: UInt8 = 0
+	var am: UInt8 = 0
+	var fm: UInt8 = 0
 }

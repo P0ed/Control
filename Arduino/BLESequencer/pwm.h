@@ -30,8 +30,8 @@ static void initPWM() {
   nrfx_pwm_init(&pwm, &config, NULL);
 }
 
-static void setPWM(float a, float b) {
-  (*seq_values).channel_0 = (1 - min(max(a, 0), 1)) * 255;
-  (*seq_values).channel_1 = (1 - min(max(b, 0), 1)) * 255;
+static void setPWM(unsigned char a, unsigned char b) {
+  (*seq_values).channel_0 = 255 - a;
+  (*seq_values).channel_1 = 255 - b;
   (void)nrfx_pwm_simple_playback(&pwm, &seq, 1, NRFX_PWM_FLAG_LOOP);
 }

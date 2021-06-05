@@ -9,12 +9,12 @@ struct MainView: View {
 			Color(model.color).ignoresSafeArea()
 			VStack {
 				PatternView(
-					pattern: model.pendingPattern ?? model.state.pattern,
-					idx: model.pendingIndex
+					pattern: model.state.pendingPattern ?? model.state.pattern,
+					idx: model.state.pendingIndex
 				)
 				Text("\(String(format: "%.1f", model.state.bpm))")
 					.font(.system(.largeTitle, design: .monospaced))
-					.foregroundColor(model.state.bpm == 0 || !model.bleControls.contains(.run) ? .clear : .text)
+					.foregroundColor(model.state.bpm == 0 || !model.state.bleControls.contains(.run) ? .clear : .text)
 				VStack {
 					HStack {
 						signedByteText(model.controls.leftTrigger, .trailing)

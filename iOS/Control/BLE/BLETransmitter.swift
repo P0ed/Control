@@ -7,8 +7,6 @@ final class BLETransmitter {
 		var peripheral: CBPeripheral
 		var clockBPM: CBCharacteristic
 		var pattern: CBCharacteristic
-		var valueA: CBCharacteristic
-		var valueB: CBCharacteristic
 		var controls: CBCharacteristic
 	}
 
@@ -69,6 +67,7 @@ final class BLETransmitter {
 }
 
 extension BLETransmitter.Service {
+
 	init(peripheral: CBPeripheral, characteristics: [CBCharacteristic]) throws {
 		let find: (CBUUID) throws -> CBCharacteristic = { uuid in
 			try unwrap(characteristics.first(where: { $0.uuid == uuid }))
@@ -77,8 +76,6 @@ extension BLETransmitter.Service {
 			peripheral: peripheral,
 			clockBPM: find(.clockBPM),
 			pattern: find(.pattern),
-			valueA: find(.valueA),
-			valueB: find(.valueB),
 			controls: find(.controls)
 		)
 	}
@@ -93,12 +90,6 @@ extension BLETransmitter.Service {
 	}
 	func setPattern(_ pattern: BLEPattern) {
 		write(value: pattern, for: \.pattern)
-	}
-	func setValueA(_ value: LFO) {
-		write(value: value, for: \.valueA)
-	}
-	func setValueB(_ value: LFO) {
-		write(value: value, for: \.valueB)
 	}
 	func setControls(_ value: BLEControls) {
 		write(value: value, for: \.controls)

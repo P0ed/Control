@@ -8,9 +8,6 @@ final class Model: ObservableObject {
 		var bpm: Float
 		var pattern: Pattern
 
-		var lfoA = LFO()
-		var lfoB = LFO()
-
 		var bleControls = BLEControls()
 
 		var pendingPattern: Pattern?
@@ -33,47 +30,38 @@ final class Model: ObservableObject {
 	init(transmitter: BLETransmitter, controller: Controller) {
 		state = _store.value.state
 
-		let mapControl = { (controller.$controls.map($0) as Property<Bool>).distinctUntilChanged() }
-		let controlPressed = { control, pressed in mapControl { $0.buttons.contains(control) }.observe(pressed) }
-		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(pressed) }
-
-		let toggleRunStop = { [unowned self] in state.bleControls.formSymmetricDifference(.run) }
-		let handleSquare: (Bool) -> Void = { [_isModified] pressed in
-			if pressed { _isModified.value = false } else if !_isModified.value { toggleRunStop() }
-		}
-		let setBPM: ((Float) -> Float) -> Void = { [unowned self] f in modify(&state.bpm) { $0 = .bpm(f($0)) } }
+		let mapControl = { controller.$controls.map($0).distinctUntilChanged() as Property<Bool> }
+		let control = { ctrl, pressed in mapControl { $0.buttons.contains(ctrl) }.observe(pressed) }
+		let controlPressed = { ctrl, pressed in control(ctrl, Fn.if(pressed, {})) }
+		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.if(pressed, {})) }
+		let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = .bpm(f($0)) } }
 
 		lifetime = [
-			$state.sink { [unowned self] state in modify(&store) { $0.state = state } },
-			$controls.sink { [unowned self] in handleControls($0) },
-			transmitter.$isConnected.observe { [unowned self] in isBLEConnected = $0 },
-			controller.$isConnected.observe { [unowned self] in isControllerConnected = $0 },
+			$state.sink { [self] state in modify(&store) { $0.state = state } },
+			$controls.sink { [self] in handleControls($0) },
+			transmitter.$isConnected.observe { [self] in isBLEConnected = $0 },
+			controller.$isConnected.observe { [self] in isControllerConnected = $0 },
 			transmitter.$service.observe(handleService),
-			controller.$controls.observe { [unowned self] in controls = $0 },
-			anyPressed(.dPad) { [_isModified] in if $0 { _isModified.value = true } },
-			anyPressed(.dPad) { [unowned self] pressed in if pressed { handleDPad() } },
-			controlPressed([.up, .square]) { if $0 { setBPM { round($0 / 10) * 10 + 10 } } },
-			controlPressed([.down, .square]) { if $0 { setBPM { round($0 / 10) * 10 - 10 } } },
-			controlPressed([.left, .square]) { if $0 { setBPM { $0 * 3 / 4 } } },
-			controlPressed([.right, .square]) { if $0 { setBPM { $0 * 4 / 3 } } },
-			controlPressed(.cross) { [unowned self] pressed in handleCross(pressed) },
-			controlPressed(.circle) { [unowned self] pressed in handleCircle(pressed) },
-			controlPressed(.square, handleSquare),
-			controlPressed(.triangle) { [unowned self] in handleEditPattern($0) },
-			controlPressed(.scan) { if $0 { transmitter.scan() } },
-			Timer.repeat(1 / 16) { [unowned self] in handleTimer() }
+			controller.$controls.observe { [self] in controls = $0 },
+			anyPressed(.dPad) { [self] in isModified = true },
+			anyPressed(.dPad, handleDPad),
+			controlPressed([.up, .square]) { setBPM { round($0 / 10) * 10 + 10 } },
+			controlPressed([.down, .square]) { setBPM { round($0 / 10) * 10 - 10 } },
+			controlPressed([.left, .square]) { setBPM { $0 * 3 / 4 } },
+			controlPressed([.right, .square]) { setBPM { $0 * 4 / 3 } },
+			control(.cross, handleCross),
+			control(.circle, handleCircle),
+			control(.square, handleSquare),
+			control(.triangle, handleEditPattern),
+			controlPressed(.scan, transmitter.scan),
+			Timer.repeat(1 / 16, handleTimer)
 		]
 
 		UIApplication.shared.isIdleTimerDisabled = true
 	}
 
 	private func handleControls(_ controls: Controls) {
-		if !controls.buttons.contains(.square) {
-			modify(&state) { state in
-				state.lfoA = controls.lfoA
-				state.lfoB = controls.lfoB
-			}
-		}
+
 	}
 
 	private var handleService: (BLETransmitter.Service?) -> Void {
@@ -82,11 +70,9 @@ final class Model: ObservableObject {
 				let pattern = $state.map(\.pattern.bleRepresentation).removeDuplicates().sink(receiveValue: service.setPattern)
 				let controls = $state.map(\.bleControls).removeDuplicates().sink(receiveValue: service.setControls)
 				let bpm = $state.map(\.bpm).removeDuplicates().sink(receiveValue: service.setClock)
-				let a = $state.map(\.lfoA).removeDuplicates().sink(receiveValue: service.setValueA)
-				let b = $state.map(\.lfoB).removeDuplicates().sink(receiveValue: service.setValueB)
 
 				return ActionDisposable(
-					action: [pattern, controls, bpm, a, b].map { $0.cancel }.reduce({}, •)
+					action: [pattern, controls, bpm].map { $0.cancel }.reduce({}, •)
 				)
 			}
 		}
@@ -133,6 +119,14 @@ final class Model: ObservableObject {
 		}
 	}
 
+	private func handleSquare(_ pressed: Bool) {
+		if pressed {
+			isModified = false
+		} else if !isModified {
+			runStop()
+		}
+	}
+
 	private func handleEditPattern(_ pressed: Bool) {
 		if pressed { isModified = false } else if !isModified {
 			modify(&state) {
@@ -154,10 +148,16 @@ final class Model: ObservableObject {
 				let f = { $0 * $0 as Float }
 				let diff = f(controls.rightTrigger) - f(controls.leftTrigger)
 				let newValue = Float.bpm(state.bpm + diff * 4)
-				if newValue != state.bpm { state.bpm = newValue }
+				if newValue != state.bpm {
+					state.bpm = newValue
+					isModified = true
+				}
 			}
-			isModified = true
 		}
+	}
+
+	private func runStop() {
+		state.bleControls.formSymmetricDifference(.run)
 	}
 }
 

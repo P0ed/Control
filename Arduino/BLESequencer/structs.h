@@ -32,19 +32,11 @@ bool operator &(Controls lhs, Controls rhs) {
   return lhs.bits & rhs.bits;
 }
 
-struct LFO {
-  unsigned char offset;
-  unsigned char am;
-  unsigned char fm;
-};
-
 struct State {
   unsigned long lastTick;
   float clockBPM;
   char idx;
   Pattern pattern;
   Pattern nextPattern;
-  LFO valueA;
-  LFO valueB;
   Controls controls;
 };

@@ -83,6 +83,10 @@ public extension Fn {
 
 	/// Simple print sink
 	static func print<A>(_ x: A) -> () { Swift.print(x) }
+
+	static func `if`<A>(_ `true`: @escaping () -> A, _ `false`: @escaping () -> A) -> (Bool) -> A {
+		{ value in value ? `true`() : `false`() }
+	}
 }
 
 public extension Fn {

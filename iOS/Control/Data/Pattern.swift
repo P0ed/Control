@@ -16,6 +16,7 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 }
 
 extension Pattern {
+
 	init(bits: UInt16) {
 		self = Pattern(
 			rows: 4,
@@ -100,10 +101,4 @@ struct BLEPattern: Equatable {
 
 enum Direction {
 	case up, right, down, left
-}
-
-struct LFO: Equatable {
-	var offset: UInt8 = 0
-	var am: UInt8 = 0
-	var fm: UInt8 = 0
 }

@@ -55,20 +55,3 @@ extension Controls.Buttons {
 		return .none
 	}
 }
-
-extension LFO {
-	init(stick: Controls.Thumbstick, trigger: Float) {
-		self = LFO(
-			offset: stick.x >= 0
-				? UInt8(min(max(stick.x, 0), 1) * 255)
-				: UInt8(min(max(-stick.x, 0), 1) * 255) & ~0x1F,
-			am: UInt8(min(max(stick.y, 0), 1) * 255),
-			fm: UInt8(min(max(trigger, 0), 1) * 255)
-		)
-	}
-}
-
-extension Controls {
-	var lfoA: LFO { LFO(stick: leftStick, trigger: leftTrigger) }
-	var lfoB: LFO { LFO(stick: rightStick, trigger: rightTrigger) }
-}

@@ -6,12 +6,12 @@ final class Model: ObservableObject {
 
 	struct State {
 		var bpm: Float
-		var pattern: Pattern
-
 		var bleControls = BLEControls()
+		var field: Field
+		var patternIndex: Int = 0
 
-		var pendingPattern: Pattern?
-		var pendingIndex: Int?
+		var pending: Field?
+		var cursor: Int?
 	}
 
 	@IO(.store(key: "state", fallback: .initial))
@@ -34,7 +34,7 @@ final class Model: ObservableObject {
 		let control = { ctrl, pressed in mapControl { $0.buttons.contains(ctrl) }.observe(pressed) }
 		let controlPressed = { ctrl, pressed in control(ctrl, Fn.if(pressed, {})) }
 		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.if(pressed, {})) }
-		let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = .bpm(f($0)) } }
+		let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = f($0).bpm } }
 
 		lifetime = [
 			$state.sink { [self] state in modify(&store) { $0.state = state } },
@@ -52,7 +52,7 @@ final class Model: ObservableObject {
 			control(.cross, handleCross),
 			control(.circle, handleCircle),
 			control(.square, handleSquare),
-			control(.triangle, handleEditPattern),
+			control(.triangle, handleTriangle),
 			controlPressed(.scan, transmitter.scan),
 			Timer.repeat(1 / 16, handleTimer)
 		]
@@ -67,7 +67,7 @@ final class Model: ObservableObject {
 	private var handleService: (BLETransmitter.Service?) -> Void {
 		{ [unowned self, subscription = SerialDisposable()] service in
 			subscription.innerDisposable = service.map { service in
-				let pattern = $state.map(\.pattern.bleRepresentation).removeDuplicates().sink(receiveValue: service.setPattern)
+				let pattern = $state.map(\.field.bleRepresentation).removeDuplicates().sink(receiveValue: service.setPattern)
 				let controls = $state.map(\.bleControls).removeDuplicates().sink(receiveValue: service.setControls)
 				let bpm = $state.map(\.bpm).removeDuplicates().sink(receiveValue: service.setClock)
 
@@ -79,66 +79,67 @@ final class Model: ObservableObject {
 	}
 
 	private func handleDPad() {
-		guard let pattern = state.pendingPattern, let direction = controls.buttons.dPadDirection else { return }
+		guard let field = state.pending, let direction = controls.buttons.dPadDirection else { return }
 
 		if controls.buttons.contains([.shiftLeft, .shiftRight]) {
-			state.pendingPattern = modify(pattern) { $0.shift(direction: direction) }
+			state.pending = modify(field) { $0[state.patternIndex].shift(direction: direction) }
 		} else if controls.buttons.contains(.shiftLeft) {
-			state.pendingPattern = modify(pattern) { $0.modifySize(subtract: true, direction: direction) }
+			state.pending = modify(field) { $0[state.patternIndex].modifySize(subtract: true, direction: direction) }
 		} else if controls.buttons.contains(.shiftRight) {
-			state.pendingPattern = modify(pattern) { $0.modifySize(subtract: false, direction: direction) }
+			state.pending = modify(field) { $0[state.patternIndex].modifySize(subtract: false, direction: direction) }
 		} else {
-			movePendingIndex(direction: direction)
+			moveCursor(direction: direction)
 		}
 	}
 
-	private func movePendingIndex(direction: Direction) {
-		guard let idx = state.pendingIndex, let pattern = state.pendingPattern else { return }
+	private func moveCursor(direction: Direction) {
+		guard let idx = state.cursor, let pattern = state.pending?[state.patternIndex] else { return }
 		switch direction {
-		case .up: state.pendingIndex = ((8 * pattern.rows) + idx - 8) % (8 * pattern.rows)
-		case .right: state.pendingIndex = (idx % 8 + 1) % pattern.cols + (idx / 8) * 8
-		case .down: state.pendingIndex = (idx + 8) % (8 * pattern.rows)
-		case .left: state.pendingIndex = ((pattern.cols + idx % 8 - 1) % pattern.cols) + (idx / 8) * 8
+		case .up: state.cursor = ((8 * pattern.rows) + idx - 8) % (8 * pattern.rows)
+		case .right: state.cursor = (idx % 8 + 1) % pattern.cols + (idx / 8) * 8
+		case .down: state.cursor = (idx + 8) % (8 * pattern.rows)
+		case .left: state.cursor = ((pattern.cols + idx % 8 - 1) % pattern.cols) + (idx / 8) * 8
 		}
 	}
 
 	private func handleCross(_ pressed: Bool) {
-		if let pattern = state.pendingPattern, let idx = state.pendingIndex {
-			if pressed { state.pendingPattern = modify(pattern) { $0[idx].toggle() } }
+		if pressed, controls.buttons.modifiers == .shiftLeft {
+			state.patternIndex = 0
+		} else if let field = state.pending, let idx = state.cursor {
+			if pressed { state.pending = modify(field) { $0[state.patternIndex][idx].toggle() } }
 		} else if !controls.buttons.contains(.shiftRight) {
 			state.bleControls.set(.mute, pressed: pressed)
 		}
 	}
 
 	private func handleCircle(_ pressed: Bool) {
-		if state.pendingPattern != nil {
-			state.pendingPattern = nil
-			state.pendingIndex = nil
+		if pressed, controls.buttons.modifiers == .shiftLeft {
+			state.patternIndex = 1
+		} else if pressed, state.pending != nil {
+			state.pending = nil
+			state.cursor = nil
 		} else if !controls.buttons.contains(.shiftRight) {
 			state.bleControls.set(.changePattern, pressed: pressed)
 		}
 	}
 
 	private func handleSquare(_ pressed: Bool) {
-		if pressed {
+		if pressed, controls.buttons.modifiers == .shiftLeft {
+			state.patternIndex = 2
+		} else if pressed {
 			isModified = false
 		} else if !isModified {
 			runStop()
 		}
 	}
 
-	private func handleEditPattern(_ pressed: Bool) {
-		if pressed { isModified = false } else if !isModified {
-			modify(&state) {
-				if let pending = state.pendingPattern {
-					$0.pattern = pending
-					$0.pendingPattern = nil
-					$0.pendingIndex = nil
-				} else {
-					$0.pendingPattern = $0.pattern
-					$0.pendingIndex = 0
-				}
-			}
+	private func handleTriangle(_ pressed: Bool) {
+		if pressed, controls.buttons.modifiers == .shiftLeft {
+			state.patternIndex = 3
+		} else if pressed {
+			isModified = false
+		} else if !isModified {
+			state.toggleCursor()
 		}
 	}
 
@@ -147,7 +148,7 @@ final class Model: ObservableObject {
 			if controls.buttons.contains(.square) {
 				let f = { $0 * $0 as Float }
 				let diff = f(controls.rightTrigger) - f(controls.leftTrigger)
-				let newValue = Float.bpm(state.bpm + diff * 4)
+				let newValue = (state.bpm + diff * 4).bpm
 				if newValue != state.bpm {
 					state.bpm = newValue
 					isModified = true
@@ -162,5 +163,19 @@ final class Model: ObservableObject {
 }
 
 private extension Float {
-	static func bpm(_ bpm: Float) -> Float { min(max(bpm, 0), 420) }
+	var bpm: Float { min(max(self, 0), 420) }
+}
+
+extension Model.State {
+
+	mutating func toggleCursor() {
+		if let next = pending {
+			field = next
+			pending = nil
+			cursor = nil
+		} else {
+			pending = field
+			cursor = 0
+		}
+	}
 }

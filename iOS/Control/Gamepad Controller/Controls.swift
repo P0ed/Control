@@ -54,4 +54,6 @@ extension Controls.Buttons {
 		if contains(.left) { return .left }
 		return .none
 	}
+
+	var modifiers: Self { intersection([.shiftLeft, .shiftRight]) }
 }

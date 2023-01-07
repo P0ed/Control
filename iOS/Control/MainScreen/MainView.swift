@@ -8,9 +8,12 @@ struct MainView: View {
 		ZStack {
 			Color(model.color).ignoresSafeArea()
 			VStack {
+				Text("\(model.state.patternIndex)")
+					.font(.system(.largeTitle, design: .monospaced))
+					.foregroundColor(.text)
 				PatternView(
-					pattern: model.state.pendingPattern ?? model.state.pattern,
-					idx: model.state.pendingIndex
+					pattern: model.state.pending?[model.state.patternIndex] ?? model.state.field[model.state.patternIndex],
+					idx: model.state.cursor
 				)
 				Text("\(String(format: "%.1f", model.state.bpm))")
 					.font(.system(.largeTitle, design: .monospaced))

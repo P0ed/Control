@@ -5,7 +5,7 @@ struct Pattern {
   const static struct Pattern empty;
 
   bool isHighAtIndex(int idx) {
-    return bits & 1 << idx;
+    return bits & 1 << (idx % count);
   }
 };
 
@@ -14,8 +14,22 @@ const struct Pattern Pattern::empty = {
   .bits = 0
 };
 
+struct Field {
+  Pattern patterns[4];
+
+  const static struct Field empty;
+};
+
+const struct Field Field::empty = {
+  .patterns = { Pattern::empty, Pattern::empty, Pattern::empty, Pattern::empty }
+};
+
 struct Controls {
   short bits;
+
+  bool isRunning() { return bits & Controls::run.bits; }
+  bool isReset() { return bits & Controls::reset.bits; }
+  bool isChangePattern() { return bits & Controls::changePattern.bits; }
 
   const static struct Controls run;
   const static struct Controls reset;
@@ -35,8 +49,21 @@ bool operator &(Controls lhs, Controls rhs) {
 struct State {
   unsigned long lastTick;
   float clockBPM;
-  char idx;
-  Pattern pattern;
-  Pattern nextPattern;
   Controls controls;
+  unsigned long idx;
+  Field field;
+  Field pending;
+
+  const static unsigned long maxIdx;
+
+  bool isAtStartOf(int ptnIdx) {
+    return idx / 2 % field.patterns[ptnIdx].count == 0;
+  }
+
+  void nextStep(unsigned long time) {
+    lastTick = time;
+    idx = (idx + 1) % (State::maxIdx * 2);    
+  }
 };
+
+const unsigned long State::maxIdx = 40320;    // 8!

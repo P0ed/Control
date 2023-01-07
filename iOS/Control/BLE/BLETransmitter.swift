@@ -88,7 +88,7 @@ extension BLETransmitter.Service {
 	func setClock(_ clock: Float) {
 		write(value: clock, for: \.clockBPM)
 	}
-	func setPattern(_ pattern: BLEPattern) {
+	func setPattern(_ pattern: BLEField) {
 		write(value: pattern, for: \.pattern)
 	}
 	func setControls(_ value: BLEControls) {

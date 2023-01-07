@@ -4,10 +4,10 @@
 State state = {
   .lastTick = 0,
   .clockBPM = 0,
+  .controls = {0},
   .idx = 0,
-  .pattern = Pattern::empty,
-  .nextPattern = Pattern::empty,
-  .controls = {0}
+  .field = Field::empty,
+  .pending = Field::empty
 };
 
 void setup() {
@@ -30,54 +30,58 @@ void loop() {
 
 void runClockIfNeeded(const unsigned long clock) {
   
-  if (state.clockBPM && (state.controls & Controls::run)) {
-  
-    const unsigned long nextTick = state.lastTick + 60 * 1000 / state.clockBPM / 8;
-
-    if (clock > nextTick) {
-      state.lastTick = clock;
-      if (state.idx == 0 || (state.controls & Controls::changePattern)) {
-        state.pattern = state.nextPattern;
-      }
-
-      const bool isMuted = state.controls & Controls::mute;
-      const bool patternValue = state.pattern.isHighAtIndex(state.idx / 2);
-
-      digitalWrite(LED_BUILTIN, state.idx % 2 ? HIGH : LOW);
-      // // clock
-      // digitalWrite(A1, state.idx % 2 ? HIGH : LOW);
-      // digitalWrite(A2, patternValue && !isMuted ? HIGH : LOW);
-
-      state.idx = (state.idx + 1) % (state.pattern.count * 2);
-
-      digitalWrite(A0, HIGH);
-      digitalWrite(A1, HIGH);
-      digitalWrite(A2, HIGH);
-      digitalWrite(A3, HIGH);
-      digitalWrite(A4, HIGH);
-      digitalWrite(A5, HIGH);
+  if (state.clockBPM && state.controls.isRunning()) {
+    const unsigned long oneTick = 1000 * 60 / state.clockBPM / 8;   // Why 8 not 2?
+    if (clock > state.lastTick + oneTick) {
+      tick(clock);
     }
   } else {
-    state.lastTick = 0;
-    state.idx = 0;
-    digitalWrite(LED_BUILTIN, LOW);
-    digitalWrite(A0, LOW);
-    digitalWrite(A1, LOW);
-    digitalWrite(A2, LOW);
-    digitalWrite(A3, LOW);
-    digitalWrite(A4, LOW);
-    digitalWrite(A5, LOW);
+    stop();
   }
 }
 
+void tick(unsigned long time) {
+  
+  if (state.isAtStartOf(0) || state.controls.isChangePattern()) {
+    state.field = state.pending;
+  }
+  if (state.controls.isReset()) {
+    state.idx = 0;
+  }
+
+  const bool isMuted = state.controls & Controls::mute;
+
+  digitalWrite(LED_BUILTIN, state.idx % 2);
+  digitalWrite(A0, HIGH);
+  digitalWrite(A1, state.idx % 2);
+  digitalWrite(A2, state.field.patterns[0].isHighAtIndex(state.idx / 2) && !isMuted);
+  digitalWrite(A3, state.field.patterns[1].isHighAtIndex(state.idx / 2) && !isMuted);
+  digitalWrite(A4, state.field.patterns[2].isHighAtIndex(state.idx / 2) && !isMuted);
+  digitalWrite(A5, state.field.patterns[3].isHighAtIndex(state.idx / 2) && !isMuted);
+
+  state.nextStep(time);
+}
+
+void stop() {
+  state.lastTick = 0;
+  state.idx = 0;
+  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(A0, LOW);
+  digitalWrite(A1, LOW);
+  digitalWrite(A2, LOW);
+  digitalWrite(A3, LOW);
+  digitalWrite(A4, LOW);
+  digitalWrite(A5, LOW);
+}
+
 void didChangeClockBPM(BLEDevice central, BLECharacteristic characteristic) {
-  memcpy(&state.clockBPM, (unsigned char*)characteristic.value(), characteristic.valueSize());
+  memcpy(&state.clockBPM, (unsigned char *)characteristic.value(), characteristic.valueSize());
 }
 
 void didChangePattern(BLEDevice central, BLECharacteristic characteristic) {
-  memcpy(&state.nextPattern, (unsigned char*)characteristic.value(), characteristic.valueSize());
+  memcpy(&state.pending, (unsigned char *)characteristic.value(), characteristic.valueSize());
 }
 
 void didChangeControls(BLEDevice central, BLECharacteristic characteristic) {
-  memcpy(&state.controls, (unsigned char*)characteristic.value(), characteristic.valueSize());
+  memcpy(&state.controls, (unsigned char *)characteristic.value(), characteristic.valueSize());
 }

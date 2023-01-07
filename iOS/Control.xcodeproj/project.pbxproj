@@ -13,7 +13,6 @@
 		5F714599265A683A00A73D7F /* PatternView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F714598265A683A00A73D7F /* PatternView.swift */; };
 		5FBC7C122666407400286A9B /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F71458B26597DBA00A73D7F /* GameController.framework */; };
 		5FBC7C172666409100286A9B /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FBC7C162666409100286A9B /* GameController.framework */; };
-		5FBC7C182666409900286A9B /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FBC7C162666409100286A9B /* GameController.framework */; };
 		5FD6D72E265A81D0000B9801 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD6D72D265A81D0000B9801 /* Controls.swift */; };
 		5FE9D270265437F300B217CA /* BLEUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE9D26F265437F300B217CA /* BLEUUID.swift */; };
 		5FE9D2732654381C00B217CA /* BLEDelegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE9D2722654381C00B217CA /* BLEDelegates.swift */; };
@@ -111,7 +110,6 @@
 			files = (
 				5FBC7C172666409100286A9B /* GameController.framework in Frameworks */,
 				5FBC7C122666407400286A9B /* GameController.framework in Frameworks */,
-				5FBC7C182666409900286A9B /* GameController.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -327,7 +325,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1240;
-				LastUpgradeCheck = 1240;
+				LastUpgradeCheck = 1410;
 				TargetAttributes = {
 					5FF16E9D2642FD090045503F = {
 						CreatedOnToolsVersion = 12.4;

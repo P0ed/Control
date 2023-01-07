@@ -153,3 +153,7 @@ struct BLEField: Equatable {
 enum Direction {
 	case up, right, down, left
 }
+
+enum Modifiers {
+	case none, l, r, lr
+}

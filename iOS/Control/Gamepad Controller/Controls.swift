@@ -55,5 +55,12 @@ extension Controls.Buttons {
 		return .none
 	}
 
-	var modifiers: Self { intersection([.shiftLeft, .shiftRight]) }
+	var modifiers: Modifiers {
+		switch (contains(.shiftLeft), contains(.shiftRight)) {
+		case (false, false): return .none
+		case (true, false): return .l
+		case (false, true): return .r
+		case (true, true): return .lr
+		}
+	}
 }

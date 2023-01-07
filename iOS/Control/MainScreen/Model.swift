@@ -81,14 +81,11 @@ final class Model: ObservableObject {
 	private func handleDPad() {
 		guard let field = state.pending, let direction = controls.buttons.dPadDirection else { return }
 
-		if controls.buttons.contains([.shiftLeft, .shiftRight]) {
-			state.pending = modify(field) { $0[state.patternIndex].shift(direction: direction) }
-		} else if controls.buttons.contains(.shiftLeft) {
-			state.pending = modify(field) { $0[state.patternIndex].modifySize(subtract: true, direction: direction) }
-		} else if controls.buttons.contains(.shiftRight) {
-			state.pending = modify(field) { $0[state.patternIndex].modifySize(subtract: false, direction: direction) }
-		} else {
-			moveCursor(direction: direction)
+		switch controls.buttons.modifiers {
+		case .none: moveCursor(direction: direction)
+		case .l: state.pending = modify(field) { $0[state.patternIndex].modifySize(subtract: true, direction: direction) }
+		case .r: state.pending = modify(field) { $0[state.patternIndex].modifySize(subtract: false, direction: direction) }
+		case .lr: state.pending = modify(field) { $0[state.patternIndex].shift(direction: direction) }
 		}
 	}
 
@@ -103,43 +100,55 @@ final class Model: ObservableObject {
 	}
 
 	private func handleCross(_ pressed: Bool) {
-		if pressed, controls.buttons.modifiers == .shiftLeft {
-			state.patternIndex = 0
-		} else if let field = state.pending, let idx = state.cursor {
-			if pressed { state.pending = modify(field) { $0[state.patternIndex][idx].toggle() } }
-		} else if !controls.buttons.contains(.shiftRight) {
-			state.bleControls.set(.mute, pressed: pressed)
+		switch controls.buttons.modifiers {
+		case .none:
+			if let field = state.pending, let idx = state.cursor {
+				if pressed { state.pending = modify(field) { $0[state.patternIndex][idx].toggle() } }
+			}
+		case .l: if pressed { state.patternIndex = 0 }
+		case .r: break
+		case .lr: break
 		}
 	}
 
 	private func handleCircle(_ pressed: Bool) {
-		if pressed, controls.buttons.modifiers == .shiftLeft {
-			state.patternIndex = 1
-		} else if pressed, state.pending != nil {
-			state.pending = nil
-			state.cursor = nil
-		} else if !controls.buttons.contains(.shiftRight) {
-			state.bleControls.set(.changePattern, pressed: pressed)
+		switch controls.buttons.modifiers {
+		case .none:
+			if pressed, state.pending != nil {
+				state.pending = nil
+				state.cursor = nil
+			}
+		case .l: if pressed { state.patternIndex = 1 }
+		case .r: break
+		case .lr: break
 		}
 	}
 
 	private func handleSquare(_ pressed: Bool) {
-		if pressed, controls.buttons.modifiers == .shiftLeft {
-			state.patternIndex = 2
-		} else if pressed {
-			isModified = false
-		} else if !isModified {
-			runStop()
+		switch controls.buttons.modifiers {
+		case .none:
+			if pressed {
+				isModified = false
+			} else if !isModified {
+				runStop()
+			}
+		case .l: if pressed { state.patternIndex = 2 }
+		case .r: break
+		case .lr: break
 		}
 	}
 
 	private func handleTriangle(_ pressed: Bool) {
-		if pressed, controls.buttons.modifiers == .shiftLeft {
-			state.patternIndex = 3
-		} else if pressed {
-			isModified = false
-		} else if !isModified {
-			state.toggleCursor()
+		switch controls.buttons.modifiers {
+		case .none:
+			if pressed {
+				isModified = false
+			} else if !isModified {
+				state.toggleCursor()
+			}
+		case .l: if pressed { state.patternIndex = 3 }
+		case .r: break
+		case .lr: break
 		}
 	}
 

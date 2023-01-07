@@ -50,11 +50,13 @@ struct State {
   unsigned long lastTick;
   float clockBPM;
   Controls controls;
+  char tick;
   unsigned long idx;
   Field field;
   Field pending;
 
   const static unsigned long maxIdx;
+  const static char ticksPerClock;
 
   bool isAtStartOf(int ptnIdx) {
     return idx / 2 % field.patterns[ptnIdx].count == 0;
@@ -62,8 +64,15 @@ struct State {
 
   void nextStep(unsigned long time) {
     lastTick = time;
-    idx = (idx + 1) % (State::maxIdx * 2);    
+    tick = (tick + 1) % State::ticksPerClock;
+    if (!tick) idx = (idx + 1) % State::maxIdx;
+  }
+
+  void reset() {
+    lastTick = 0;
+    idx = 0;
   }
 };
 
 const unsigned long State::maxIdx = 40320;    // 8!
+const char State::ticksPerClock = 32;

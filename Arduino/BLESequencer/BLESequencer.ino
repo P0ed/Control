@@ -31,13 +31,7 @@ void setup() {
 void loop() {
   const unsigned long clock = millis();
   runClockIfNeeded(clock);
-
-//  static const auto pi = acos(-1);
-//  static const float am = state.valueB;
-//  static const float fm = 1;
-//  static const float acA = sin(clock / oneTick() / pi / fm) * am;
   setPWM(state.valueA.offset, state.valueB.offset);
-  
   loopBLE();
 }
 
@@ -57,8 +51,8 @@ void runClockIfNeeded(const unsigned long clock) {
       const bool patternValue = state.pattern.isHighAtIndex(state.idx / 2);
 
       digitalWrite(LED_BUILTIN, state.idx % 2 ? HIGH : LOW);
-      digitalWrite(D6, state.idx % 2 ? HIGH : LOW);
-      digitalWrite(D5, patternValue && !isMuted ? HIGH : LOW);
+      digitalWrite(A7, state.idx % 2 ? HIGH : LOW);
+      digitalWrite(A6, patternValue && !isMuted ? HIGH : LOW);
 
       state.idx = (state.idx + 1) % (state.pattern.count * 2);
     }
@@ -66,8 +60,8 @@ void runClockIfNeeded(const unsigned long clock) {
     state.lastTick = 0;
     state.idx = 0;
     digitalWrite(LED_BUILTIN, LOW);
-    digitalWrite(D6, LOW);
-    digitalWrite(D5, LOW);
+    digitalWrite(A7, LOW);
+    digitalWrite(A6, LOW);
   }
 }
 

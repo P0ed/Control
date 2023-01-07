@@ -17,26 +17,26 @@ struct MainView: View {
 					.foregroundColor(model.state.bpm == 0 || !model.state.bleControls.contains(.run) ? .clear : .text)
 				VStack {
 					HStack {
-						signedByteText(model.controls.leftTrigger, .trailing)
-						signedByteText(model.controls.rightTrigger, .leading)
+						byteText(model.controls.lfoA.offset, .trailing)
+						byteText(model.controls.lfoB.offset, .leading)
 					}
 					HStack {
-						signedByteText(model.controls.leftStick.x, .trailing)
-						signedByteText(model.controls.rightStick.x, .leading)
+						byteText(model.controls.lfoA.am, .trailing)
+						byteText(model.controls.lfoB.am, .leading)
 					}
 					HStack {
-						signedByteText(model.controls.leftStick.y, .trailing)
-						signedByteText(model.controls.rightStick.y, .leading)
+						byteText(model.controls.lfoA.fm, .trailing)
+						byteText(model.controls.lfoB.fm, .leading)
 					}
 				}
 			}
 		}
 	}
 
-	private func signedByteText(_ value: Float, _ alignment: Alignment) -> some View {
-		Text("\(Int(min(max(value * 255, -255), 255)))")
+	private func byteText(_ value: UInt8, _ alignment: Alignment) -> some View {
+		Text("\(value)")
 			.font(.system(.headline, design: .monospaced))
-			.foregroundColor(abs(value) < 1 / 255 ? .clear : .text)
+			.foregroundColor(value == 0 ? .clear : .text)
 			.frame(width: 64, alignment: alignment)
 	}
 }

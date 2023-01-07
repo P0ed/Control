@@ -15,8 +15,8 @@ static nrf_pwm_sequence_t seq = {
 static void initPWM() {
   nrfx_pwm_config_t config = {
     .output_pins  = {
-      32 + 11, // D2
-      32 + 12, // D3
+      31, // A4
+      2, // A5
       NRFX_PWM_PIN_NOT_USED,
       NRFX_PWM_PIN_NOT_USED,
     },

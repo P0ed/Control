@@ -59,7 +59,9 @@ extension Controls.Buttons {
 extension LFO {
 	init(stick: Controls.Thumbstick, trigger: Float) {
 		self = LFO(
-			offset: UInt8(min(max(stick.x, 0), 1) * 255),
+			offset: stick.x >= 0
+				? UInt8(min(max(stick.x, 0), 1) * 255)
+				: UInt8(min(max(-stick.x, 0), 1) * 255) & ~0x1F,
 			am: UInt8(min(max(stick.y, 0), 1) * 255),
 			fm: UInt8(min(max(trigger, 0), 1) * 255)
 		)

@@ -25,12 +25,13 @@ extension Color {
 	static let base = Color.black
 	static let bleDisconnected = Color(.sRGB, red: 0.1, green: 0.11, blue: 0.19, opacity: 1)
 	static let controllerDisconnected = Color(.sRGB, red: 0.2, green: 0.11, blue: 0.13, opacity: 1)
+
 	static let cellOff = Color(.sRGB, red: 0.28, green: 0.33, blue: 0.34, opacity: 0.8)
-	static let cellOn = Color(.sRGB, red: 0.4, green: 0.56, blue: 0.63, opacity: 0.8)
-	static let cellSelected = Color(.sRGB, red: 0.78, green: 0.73, blue: 0.67, opacity: 0.8)
+	static let cellOn = Color(.sRGB, red: 0.5, green: 0.66, blue: 0.83, opacity: 0.8)
+	static let cellMuted = Color(.sRGB, red: 0.39, green: 0.52, blue: 0.62, opacity: 0.8)
+	static let cellSelected = Color(.sRGB, red: 0.81, green: 0.76, blue: 0.68, opacity: 0.8)
+
 	static let text = Color(.sRGB, red: 0.94, green: 0.96, blue: 0.99, opacity: 1)
 
-	init(_ color: Color) {
-		self = color
-	}
+	init(_ color: Color) { self = color }
 }

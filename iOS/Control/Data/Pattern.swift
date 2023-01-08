@@ -1,53 +1,10 @@
 import Foundation
 
-struct Field: Codable {
-	var a: Pattern
-	var b: Pattern
-	var c: Pattern
-	var d: Pattern
-}
-
-extension Field {
-
-	static let empty = Field(a: .empty, b: .empty, c: .empty, d: .empty)
-
-	subscript(_ idx: Int) -> Pattern {
-		get {
-			switch idx % 4 {
-			case 0: return a
-			case 1: return b
-			case 2: return c
-			case 3: return d
-			default: fatalError()
-			}
-		}
-		set {
-			switch idx % 4 {
-			case 0: a = newValue
-			case 1: b = newValue
-			case 2: c = newValue
-			case 3: d = newValue
-			default: fatalError()
-			}
-		}
-	}
-
-	var all: [Pattern] { [a, b, c, d] }
-
-	var bleRepresentation: BLEField {
-		BLEField(
-			a: a.bleRepresentation,
-			b: b.bleRepresentation,
-			c: c.bleRepresentation,
-			d: d.bleRepresentation
-		)
-	}
-}
-
 struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	var rows: Int
 	var cols: Int
 	var bits: UInt64
+	var isMuted: Bool = false
 
 	var startIndex: Int { 0 }
 	var endIndex: Int { Int(rows * cols) }
@@ -56,6 +13,18 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	subscript(position: Int) -> Bool {
 		get { bits & 1 << position != 0 }
 		set { bits = newValue ? bits | 1 << position : bits & ~(1 << position) }
+	}
+}
+
+extension Pattern: CustomDebugStringConvertible {
+	var debugDescription: String {
+		(0..<8).map { row in
+			(0..<8).map { col in
+				row < rows && col < cols ? "\(self[row * 8 + col] ? "x" : "o")" : "-"
+			}
+			.joined()
+		}
+		.joined(separator: "\n")
 	}
 }
 
@@ -117,18 +86,30 @@ extension Pattern {
 		}
 	}
 
-	var bleRepresentation: BLEPattern { BLEPattern(count: UInt8(rows * cols), bits: bits) }
+	func rowBits(_ row: Int) -> UInt64 {
+		(mask(row: row) & bits) >> (row * 8)
+	}
+
+	var bleRepresentation: BLEPattern {
+		BLEPattern(
+			count: UInt8(rows * cols),
+			bits: isMuted ? 0 : (0..<rows)
+				.map { row in rowBits(row) << (cols * row) }
+				.reduce(0, |)
+		)
+	}
 }
 
 private extension Pattern {
 
-	var mask: UInt64 {
-		(0..<rows)
-			.map { row in Self.mask(range: (row * 8)..<(row * 8 + cols)) }
-			.reduce(0, |)
-	}
 	static func mask(range: Range<Int>) -> UInt64 {
 		range.count == 64 ? .max : UInt64((1 << range.count) - 1) << range.lowerBound
+	}
+	func mask(row: Int) -> UInt64 {
+		Self.mask(range: (row * 8)..<(row * 8 + cols))
+	}
+	var mask: UInt64 {
+		(0..<rows).map(mask(row:)).reduce(0, |)
 	}
 }
 
@@ -141,19 +122,4 @@ extension Pattern {
 struct BLEPattern: Equatable {
 	var count: UInt8
 	var bits: UInt64
-}
-
-struct BLEField: Equatable {
-	var a: BLEPattern
-	var b: BLEPattern
-	var c: BLEPattern
-	var d: BLEPattern
-}
-
-enum Direction {
-	case up, right, down, left
-}
-
-enum Modifiers {
-	case none, l, r, lr
 }

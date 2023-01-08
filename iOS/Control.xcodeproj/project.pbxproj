@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5F16744E2668CC7B0055DF10 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F16744D2668CC7B0055DF10 /* Store.swift */; };
+		5F2E5A95296AE93A007E760A /* Field.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2E5A94296AE93A007E760A /* Field.swift */; };
 		5F71458F265980B000A73D7F /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F71458E265980B000A73D7F /* Model.swift */; };
 		5F714595265A646100A73D7F /* Pattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F714594265A646100A73D7F /* Pattern.swift */; };
 		5F714599265A683A00A73D7F /* PatternView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F714598265A683A00A73D7F /* PatternView.swift */; };
@@ -55,6 +56,7 @@
 
 /* Begin PBXFileReference section */
 		5F16744D2668CC7B0055DF10 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		5F2E5A94296AE93A007E760A /* Field.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Field.swift; sourceTree = "<group>"; };
 		5F71458B26597DBA00A73D7F /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		5F71458E265980B000A73D7F /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		5F714594265A646100A73D7F /* Pattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pattern.swift; sourceTree = "<group>"; };
@@ -147,6 +149,7 @@
 		5FBC7C0426661D3800286A9B /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				5F2E5A94296AE93A007E760A /* Field.swift */,
 				5F714594265A646100A73D7F /* Pattern.swift */,
 				5FF16EFB264304DF0045503F /* Utils.swift */,
 				5F16744D2668CC7B0055DF10 /* Store.swift */,
@@ -382,6 +385,7 @@
 				5F71458F265980B000A73D7F /* Model.swift in Sources */,
 				5FF16EE52642FD830045503F /* NotificationCenter.swift in Sources */,
 				5FF16EEE2642FD830045503F /* Operators.swift in Sources */,
+				5F2E5A95296AE93A007E760A /* Field.swift in Sources */,
 				5FF16EA42642FD090045503F /* MainView.swift in Sources */,
 				5FF16EA22642FD090045503F /* ControlApp.swift in Sources */,
 				5FF16EE72642FD830045503F /* Timer.swift in Sources */,

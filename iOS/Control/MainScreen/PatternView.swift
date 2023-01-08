@@ -10,7 +10,11 @@ struct PatternView: View {
 			ForEach(0..<pattern.rows, id: \.self) { row in
 				HStack {
 					ForEach(0..<pattern.cols, id: \.self) { col in
-						Color(idx == row * 8 + col ? .cellSelected : pattern[row * 8 + col] ? .cellOn : .cellOff)
+						let isSelected = idx == row * 8 + col
+						let isOn = pattern[row * 8 + col]
+						let isMuted = pattern.isMuted
+
+						Color(isSelected ? .cellSelected : isOn ? (isMuted ? .cellMuted : .cellOn) : .cellOff)
 							.frame(width: 32, height: 32)
 					}
 				}

@@ -34,12 +34,11 @@ struct Controls {
 }
 
 struct BLEControls: OptionSet {
-	var rawValue: Int16 = 0
+	var rawValue: Int16
 
 	static let run = BLEControls(rawValue: 1 << 0)
 	static let reset = BLEControls(rawValue: 1 << 1)
-	static let mute = BLEControls(rawValue: 1 << 2)
-	static let changePattern = BLEControls(rawValue: 1 << 3)
+	static let changePattern = BLEControls(rawValue: 1 << 2)
 
 	mutating func set(_ control: BLEControls, pressed: Bool) {
 		if pressed { insert(control) } else { remove(control) }
@@ -47,6 +46,7 @@ struct BLEControls: OptionSet {
 }
 
 extension Controls.Buttons {
+
 	var dPadDirection: Direction? {
 		if contains(.up) { return .up }
 		if contains(.right) { return .right }
@@ -63,4 +63,16 @@ extension Controls.Buttons {
 		case (true, true): return .lr
 		}
 	}
+}
+
+enum Shape {
+	case cross, circle, square, triangle
+}
+
+enum Direction {
+	case up, right, down, left
+}
+
+enum Modifiers {
+	case none, l, r, lr
 }

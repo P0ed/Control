@@ -1,3 +1,7 @@
+bool isHigh(int value, int bit) {
+  return value & 1 << bit;
+}
+
 struct Pattern {
   unsigned char count;
   long long bits;
@@ -5,7 +9,7 @@ struct Pattern {
   const static struct Pattern empty;
 
   bool isHighAtIndex(int idx) {
-    return bits & 1 << (idx % count);
+    return isHigh(bits, idx % count);
   }
 };
 
@@ -33,14 +37,12 @@ struct Controls {
 
   const static struct Controls run;
   const static struct Controls reset;
-  const static struct Controls mute;
   const static struct Controls changePattern;
 };
 
 const struct Controls Controls::run = {1 << 0};
 const struct Controls Controls::reset = {1 << 1};
-const struct Controls Controls::mute = {1 << 2};
-const struct Controls Controls::changePattern = {1 << 3};
+const struct Controls Controls::changePattern = {1 << 2};
 
 bool operator &(Controls lhs, Controls rhs) {
   return lhs.bits & rhs.bits;
@@ -71,8 +73,9 @@ struct State {
   void reset() {
     lastTick = 0;
     idx = 0;
+    tick = 0;
   }
 };
 
 const unsigned long State::maxIdx = 40320;    // 8!
-const char State::ticksPerClock = 32;
+const char State::ticksPerClock = 4;

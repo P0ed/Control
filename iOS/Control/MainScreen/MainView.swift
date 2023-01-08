@@ -13,6 +13,9 @@ struct MainView: View {
 				Text("\(model.state.patternIndex)")
 					.font(.system(.largeTitle, design: .monospaced))
 					.foregroundColor(.text)
+				Text("*")
+					.font(.system(.largeTitle, design: .monospaced))
+					.foregroundColor(model.state.bleControls.contains(.changePattern) ? .text : .clear)
 				Spacer()
 				PatternView(
 					pattern: model.state.pending?[model.state.patternIndex] ?? model.state.field[model.state.patternIndex],

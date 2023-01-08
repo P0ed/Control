@@ -6,7 +6,7 @@ final class Model: ObservableObject {
 
 	struct State {
 		var bpm: Float
-		var bleControls = BLEControls()
+		var bleControls: BLEControls = [.changePattern]
 		var field: Field
 		var patternIndex: Int = 0
 
@@ -79,7 +79,7 @@ final class Model: ObservableObject {
 	}
 
 	private func handleDPad() {
-		guard let field = state.pending, let direction = controls.buttons.dPadDirection else { return }
+		guard let direction = controls.buttons.dPadDirection, let field = state.pending else { return }
 
 		switch controls.buttons.modifiers {
 		case .none: moveCursor(direction: direction)
@@ -102,11 +102,13 @@ final class Model: ObservableObject {
 	private func handleCross(_ pressed: Bool) {
 		switch controls.buttons.modifiers {
 		case .none:
-			if let field = state.pending, let idx = state.cursor {
-				if pressed { state.pending = modify(field) { $0[state.patternIndex][idx].toggle() } }
+			if let field = state.pending {
+				if pressed, let idx = state.cursor {
+					state.pending = modify(field) { $0[state.patternIndex][idx].toggle() }
+				}
 			}
 		case .l: if pressed { state.patternIndex = 0 }
-		case .r: break
+		case .r: if pressed { writeToPattern(0) }
 		case .lr: break
 		}
 	}
@@ -114,12 +116,16 @@ final class Model: ObservableObject {
 	private func handleCircle(_ pressed: Bool) {
 		switch controls.buttons.modifiers {
 		case .none:
-			if pressed, state.pending != nil {
+			if state.pending != nil {
 				state.pending = nil
 				state.cursor = nil
+			} else {
+				if pressed {
+					state.pattern.isMuted.toggle()
+				}
 			}
 		case .l: if pressed { state.patternIndex = 1 }
-		case .r: break
+		case .r: if pressed { writeToPattern(1) }
 		case .lr: break
 		}
 	}
@@ -127,13 +133,17 @@ final class Model: ObservableObject {
 	private func handleSquare(_ pressed: Bool) {
 		switch controls.buttons.modifiers {
 		case .none:
-			if pressed {
-				isModified = false
-			} else if !isModified {
-				runStop()
+			if state.pending == nil {
+				if pressed {
+					isModified = false
+				} else if !isModified {
+					runStop()
+				}
+			} else {
+				if pressed { state.bleControls.formSymmetricDifference(.changePattern) }
 			}
 		case .l: if pressed { state.patternIndex = 2 }
-		case .r: break
+		case .r: if pressed { writeToPattern(2) }
 		case .lr: break
 		}
 	}
@@ -147,8 +157,16 @@ final class Model: ObservableObject {
 				state.toggleCursor()
 			}
 		case .l: if pressed { state.patternIndex = 3 }
-		case .r: break
+		case .r: if pressed { writeToPattern(3) }
 		case .lr: break
+		}
+	}
+
+	private func writeToPattern(_ idx: Int) {
+		if let pending = state.pending {
+			state.pending = modify(pending) { $0[idx] = $0[state.patternIndex] }
+		} else {
+			state.field[idx] = state.pattern
 		}
 	}
 
@@ -176,6 +194,11 @@ private extension Float {
 }
 
 extension Model.State {
+
+	var pattern: Pattern {
+		get { field[patternIndex] }
+		set { field[patternIndex] = newValue }
+	}
 
 	mutating func toggleCursor() {
 		if let next = pending {

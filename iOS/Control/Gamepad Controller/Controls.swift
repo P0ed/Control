@@ -6,6 +6,8 @@ struct Controls {
 	var leftTrigger = 0 as Float
 	var rightTrigger = 0 as Float
 	var buttons = [] as Buttons
+	var sequence = [] as [Buttons]
+	var lastPress: Date = .distantPast
 
 	struct Buttons: OptionSet {
 		var rawValue: Int16 = 0
@@ -30,6 +32,18 @@ struct Controls {
 		var y: Float
 
 		static let zero = Thumbstick(x: 0, y: 0)
+	}
+
+	mutating func addToSequence(_ button: Buttons) {
+		if -lastPress.timeIntervalSinceNow > 0.5 { sequence = [] }
+		sequence.append(button)
+		lastPress = .now
+	}
+
+	func matchesSequence(_ combo: [Buttons]) -> Bool {
+		let isPressed = combo.last.map(buttons.contains) ?? true
+		let containsSequence = sequence.dropFirst(max(0, sequence.count - combo.count)).contains(combo)
+		return isPressed && containsSequence
 	}
 }
 

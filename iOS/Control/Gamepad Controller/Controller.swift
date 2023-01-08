@@ -41,9 +41,17 @@ final class Controller {
 
 			let mapControl: (GCControllerButtonInput, Controls.Buttons) -> Void = { button, control in
 				button.valueChangedHandler = { _, _, pressed in
-					_controls.modify { if pressed { $0.buttons.insert(control) } else { $0.buttons.remove(control) } }
+					_controls.modify {
+						if pressed {
+							$0.buttons.insert(control)
+							$0.addToSequence(control)
+						} else {
+							$0.buttons.remove(control)
+						}
+					}
 				}
 			}
+
 			mapControl(gamepad.buttonA, .cross)
 			mapControl(gamepad.buttonB, .circle)
 			mapControl(gamepad.dpad.up, .up)

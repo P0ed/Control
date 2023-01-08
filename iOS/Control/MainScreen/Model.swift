@@ -54,10 +54,32 @@ final class Model: ObservableObject {
 			control(.square, handleSquare),
 			control(.triangle, handleTriangle),
 			controlPressed(.scan, transmitter.scan),
+			combos(controller: controller),
 			Timer.repeat(1 / 16, handleTimer)
 		]
 
 		UIApplication.shared.isIdleTimerDisabled = true
+	}
+
+	private func combos(controller: Controller) -> Any {
+		let sequence = { (pattern: [Controls.Buttons], sink: @escaping () -> Void) -> Disposable in
+			controller.$controls.signal.filter { $0.matchesSequence(pattern) }.observe { _ in
+				if self.state.pending == nil { sink() }
+			}
+		}
+		let mod = { mod in _ = try? modify(&self.state.pattern, mod) }
+		let set = { self.state.pattern = $0 }
+
+		return [
+			sequence([.up, .up, .up, .down, .down, .down], { set(.techno) }),
+			sequence([.up, .up, .up, .down, .down, .right], { set(.lazerpresent) }),
+			sequence([.left, .left, .up, .down, .right, .right], { set(.trance) }),
+			sequence([.left, .left, .left, .left, .left, .left], { set(.hats) }),
+			sequence([.right, .right, .right, .right, .right, .right], { set(.claps) }),
+			sequence([.up, .up, .up, .up, .up, .up], { set(.all) }),
+			sequence([.down, .down, .down, .down, .down, .down], { set(.empty) }),
+			sequence([.down, .up, .down, .up, .down, .up], { mod { $0.inverse() } })
+		]
 	}
 
 	private func handleControls(_ controls: Controls) {
@@ -163,6 +185,7 @@ final class Model: ObservableObject {
 	}
 
 	private func writeToPattern(_ idx: Int) {
+
 		if let pending = state.pending {
 			state.pending = modify(pending) { $0[idx] = $0[state.patternIndex] }
 		} else {

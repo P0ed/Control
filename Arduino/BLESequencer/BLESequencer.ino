@@ -29,7 +29,7 @@ void setup() {
   clockBPMCharacteristic.setEventHandler(BLEWritten, didChangeClockBPM);
   controlsCharacteristic.setEventHandler(BLEWritten, didChangeControls);
   patternCharacteristic.setEventHandler(BLEWritten, didChangePattern);
-  
+
   int outputs = 1 << ledPin;
   for (int i = 0; i < 6; i++) outputs |= 1 << pins[i];
   NRF_P0->DIRSET = outputs;

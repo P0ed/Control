@@ -86,6 +86,10 @@ extension Pattern {
 		}
 	}
 
+	mutating func inverse() {
+		bits = ~bits & mask
+	}
+
 	func rowBits(_ row: Int) -> UInt64 {
 		(mask(row: row) & bits) >> (row * 8)
 	}
@@ -116,7 +120,11 @@ private extension Pattern {
 extension Pattern {
 	static let techno = Pattern(bits: 0b0001_0001_0001_0001 as UInt16)
 	static let trance = Pattern(bits: 0b0111_0111_0111_0111 as UInt16)
+	static let claps = Pattern(bits: 0b0001_0000_0001_0000 as UInt16)
+	static let hats = Pattern(bits: 0b0100_0100_0100_0100 as UInt16)
+	static let all = Pattern(bits: 0b1111_1111_1111_1111 as UInt16)
 	static let empty = Pattern(bits: 0 as UInt16)
+	static let lazerpresent = Pattern(rows: 4, cols: 8, bits: 0b0001_0001_0001_0001 | (0b0000_0100_1001_0001 << 16))
 }
 
 struct BLEPattern: Equatable {

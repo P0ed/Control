@@ -3,10 +3,10 @@
 #include "nrf.h"
 
 State state = {
-  .lastTick = 0,
+  .isRunning = false,
+  .nextTick = 0,
   .clockBPM = 0,
   .controls = {0},
-  .tick = 0,
   .idx = 0,
   .field = Field::empty,
   .pending = Field::empty
@@ -40,26 +40,14 @@ void loop() {
   loopBLE();
 }
 
-void runClockIfNeeded(unsigned long time) {
-  if (state.controls.isRunning()) {
-    if (!state.clockBPM) return;
-    const unsigned long oneTick = 1000000 * 60 / state.clockBPM / 4 / State::ticksPerClock;
-    if (time - state.lastTick > oneTick) tick(time);
-  } else {
-    stop();
-  }
+void runClockIfNeeded(unsigned long t) {
+  if (state.controls.isRunning() && state.clockBPM) run(t);
+  else if (state.isRunning && !state.controls.isRunning()) stop();
 }
 
-void tick(unsigned long time) {
-  if (state.isAtStartOf(0)) state.field = state.pending;
-  if (state.controls.isReset()) state.reset();
-  bool clock = state.tick / (State::ticksPerClock / 2) == 0;
-  
-  int bits = 1 << 0 | clock << 1;
-  for (int i = 0; i < 4; i++) bits |= (state.field.patterns[i].isHighAtIndex(state.idx) && state.tick == 0) << (i + 2);
-  directWrite(bits);
-
-  state.nextStep(time);
+void run(unsigned long t) {
+  if (!state.isRunning) state.start(t);
+  if (state.shouldTick(t)) directWrite(state.tick());
 }
 
 void stop() {

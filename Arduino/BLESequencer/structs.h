@@ -49,33 +49,51 @@ bool operator &(Controls lhs, Controls rhs) {
 }
 
 struct State {
-  unsigned long lastTick;
+  bool isRunning;
+  unsigned long nextTick;
   float clockBPM;
   Controls controls;
-  char tick;
   unsigned long idx;
   Field field;
   Field pending;
 
   const static unsigned long maxIdx;
-  const static char ticksPerClock;
 
   bool isAtStartOf(int ptnIdx) {
-    return idx / 2 % field.patterns[ptnIdx].count == 0;
+    return idx % 4 == 0 && (idx >> 2) % field.patterns[ptnIdx].count == 0;
   }
 
-  void nextStep(unsigned long time) {
-    lastTick = time;
-    tick = (tick + 1) % State::ticksPerClock;
-    if (!tick) idx = (idx + 1) % State::maxIdx;
+  unsigned long oneTick() {
+    return 1000000 * 60 / clockBPM / 4 / 4;
+  }
+
+  bool shouldTick(unsigned long t) {
+    return t >= nextTick && (t & 1 << 31) == (nextTick & 1 << 31);
+  }
+
+  int tick() {
+    if (isAtStartOf(0)) field = pending;
+    if (controls.isReset()) reset();
+    bool clock = (idx % 4) / 2 == 0;
+
+    int bits = 1 << 0 | clock << 1;
+    for (int i = 0; i < 4; i++) bits |= (field.patterns[i].isHighAtIndex(idx >> 2) && (idx % 4) == 0) << (i + 2);
+
+    nextTick += oneTick();
+    idx = (idx + 1) % State::maxIdx;
+
+    return bits;
+  }
+
+  void start(unsigned long t) {
+    nextTick = t;
+    isRunning = true;
   }
 
   void reset() {
-    lastTick = 0;
+    isRunning = false;
     idx = 0;
-    tick = 0;
   }
 };
 
-const unsigned long State::maxIdx = 40320;    // 8!
-const char State::ticksPerClock = 4;
+const unsigned long State::maxIdx = 40320 << 2;

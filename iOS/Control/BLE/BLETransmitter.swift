@@ -86,7 +86,7 @@ extension BLETransmitter.Service {
 		peripheral.writeValue(data, for: self[keyPath: characteristic], type: .withoutResponse)
 	}
 
-	func setClock(_ clock: Float) {
+	func setClock(_ clock: BLEClock) {
 		write(value: clock, for: \.clockBPM)
 	}
 	func setPattern(_ pattern: BLEField) {
@@ -95,4 +95,13 @@ extension BLETransmitter.Service {
 	func setControls(_ value: BLEControls) {
 		write(value: value, for: \.controls)
 	}
+}
+
+struct BLEClock: Hashable {
+	var bpm: Float
+	var swing: Float
+}
+
+extension Model.State {
+	var bleClock: BLEClock { BLEClock(bpm: bpm, swing: swing) }
 }

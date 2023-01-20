@@ -7,6 +7,7 @@ final class Model: ObservableObject {
 
 	struct State {
 		var bpm: Float
+		var swing: Float = 0
 		var bleControls: BLEControls = [.changePattern]
 		var field: Field
 		var patternIndex: Int = 0
@@ -32,11 +33,11 @@ final class Model: ObservableObject {
 		state = _store.value.state
 
 		lifetime = [
-			$controls.sink { [self] in handleControls($0) },
-			transmitter.$isConnected.observe { [self] in isBLEConnected = $0 },
-			controller.$isConnected.observe { [self] in isControllerConnected = $0 },
+			$controls.sink(receiveValue: handleControls),
+			transmitter.$isConnected.observe { self.isBLEConnected = $0 },
+			controller.$isConnected.observe { self.isControllerConnected = $0 },
 			transmitter.$service.observe(handleService),
-			controller.$controls.observe { [self] in controls = $0 },
+			controller.$controls.observe { self.controls = $0 },
 			controls(controller: controller, transmitter: transmitter),
 			combos(controller: controller),
 			Timer.repeat(1 / 16, handleTimer)
@@ -62,7 +63,8 @@ final class Model: ObservableObject {
 			sequence([.right, .right, .right, .right, .right, .right], { set(.hats) }),
 			sequence([.up, .up, .up, .up, .up, .up], { set(.all) }),
 			sequence([.down, .down, .down, .down, .down, .down], { set(.empty) }),
-			sequence([.down, .up, .down, .up, .down, .up], { mod { $0.inverse() } })
+			sequence([.down, .up, .down, .up, .down, .up], { mod { $0.inverse() } }),
+			sequence([.cross, .cross, .cross, .cross], { self.state.swing = 0; self.swing = 0 })
 		]
 	}
 
@@ -93,7 +95,7 @@ final class Model: ObservableObject {
 			subscription.innerDisposable = service.map { service in
 				let pattern = $state.map(\.field.bleRepresentation).removeDuplicates().sink(receiveValue: service.setPattern)
 				let controls = $state.map(\.bleControls).removeDuplicates().sink(receiveValue: service.setControls)
-				let bpm = $state.map(\.bpm).removeDuplicates().sink(receiveValue: service.setClock)
+				let bpm = $state.map(\.bleClock).removeDuplicates().sink(receiveValue: service.setClock)
 
 				return ActionDisposable(
 					action: [pattern, controls, bpm].map { $0.cancel }.reduce({}, •)
@@ -145,7 +147,13 @@ final class Model: ObservableObject {
 				state.cursor = nil
 			} else {
 				if pressed {
-					state.pattern.isMuted.toggle()
+					switch controls.buttons.dPadDirection {
+					case .none: state.pattern.isMuted.toggle()
+					case .down: state.pattern.dutyCycle = .off
+					case .left: state.pattern.dutyCycle = .quarter
+					case .right: state.pattern.dutyCycle = .half
+					case .up: state.pattern.dutyCycle = .full
+					}
 				}
 			}
 		case .l: if pressed { state.patternIndex = 1 }
@@ -196,6 +204,7 @@ final class Model: ObservableObject {
 	}
 
 	private var offset = (x: 0, y: 0)
+	private var swing = 0 as Float
 
 	private func handleControls(_ controls: Controls) {
 		if controls.buttons.contains(.cross) {
@@ -210,12 +219,20 @@ final class Model: ObservableObject {
 					}
 				}
 			}
-		} else if offset.x != 0 || offset.y != 0 {
-			modify(&state.pendingPattern) { ptn in
-				ptn.shift(-offset.x, direction: .right)
-				ptn.shift(-offset.y, direction: .down)
-				offset = (0, 0)
+			if controls.leftTrigger > 1 / 255 || controls.rightTrigger > 1 / 255 {
+				state.swing = (swing + controls.rightTrigger - controls.leftTrigger).clamped(to: -1...1)
+			} else {
+				state.swing = swing
 			}
+		} else {
+			if offset.x != 0 || offset.y != 0 {
+				modify(&state.pendingPattern) { ptn in
+					ptn.shift(-offset.x, direction: .right)
+					ptn.shift(-offset.y, direction: .down)
+					offset = (0, 0)
+				}
+			}
+			swing = state.swing
 		}
 	}
 
@@ -245,6 +262,7 @@ final class Model: ObservableObject {
 		modify(&state) { [store] in
 			$0.field = store.field
 			$0.bpm = store.bpm
+			$0.swing = store.swing
 		}
 	}
 }

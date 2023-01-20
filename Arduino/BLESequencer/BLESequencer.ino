@@ -5,8 +5,8 @@
 State state = {
   .isRunning = false,
   .nextTick = 0,
-  .clockBPM = 0,
-  .controls = {0},
+  .clock = { .bpm = 0, .swing = 0 },
+  .controls = { 0 },
   .idx = 0,
   .field = Field::empty,
   .pending = Field::empty
@@ -26,7 +26,7 @@ void directWrite(int value) {
 
 void setup() {
   initBLE();
-  clockBPMCharacteristic.setEventHandler(BLEWritten, didChangeClockBPM);
+  clockCharacteristic.setEventHandler(BLEWritten, didChangeClock);
   controlsCharacteristic.setEventHandler(BLEWritten, didChangeControls);
   patternCharacteristic.setEventHandler(BLEWritten, didChangePattern);
 
@@ -41,7 +41,7 @@ void loop() {
 }
 
 void runClockIfNeeded(unsigned long t) {
-  if (state.controls.isRunning() && state.clockBPM) run(t);
+  if (state.controls.isRunning() && state.clock.bpm) run(t);
   else if (state.isRunning && !state.controls.isRunning()) stop();
 }
 
@@ -55,8 +55,8 @@ void stop() {
   directWrite(0);
 }
 
-void didChangeClockBPM(BLEDevice central, BLECharacteristic characteristic) {
-  memcpy(&state.clockBPM, (unsigned char *)characteristic.value(), characteristic.valueSize());
+void didChangeClock(BLEDevice central, BLECharacteristic characteristic) {
+  memcpy(&state.clock, (unsigned char *)characteristic.value(), characteristic.valueSize());
 }
 
 void didChangePattern(BLEDevice central, BLECharacteristic characteristic) {

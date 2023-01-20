@@ -16,14 +16,15 @@ extension IO where A: Codable {
 
 struct StoredState: Codable {
 	var bpm: Float
+	var swing: Float
 	var field: Field
 }
 
 extension StoredState {
-	static let initial = StoredState(bpm: 120, field: .empty)
+	static let initial = StoredState(bpm: 120, swing: 0, field: .empty)
 
 	var state: Model.State {
-		get { Model.State(bpm: bpm, field: field) }
-		set { bpm = newValue.bpm; field = newValue.field }
+		get { Model.State(bpm: bpm, swing: swing, field: field) }
+		set { bpm = newValue.bpm; swing = newValue.swing; field = newValue.field }
 	}
 }

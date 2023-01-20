@@ -55,10 +55,15 @@ bool operator &(Controls lhs, Controls rhs) {
   return lhs.bits & rhs.bits;
 }
 
+struct Clock {
+  float bpm;
+  float swing;
+};
+
 struct State {
   bool isRunning;
   unsigned long nextTick;
-  float clockBPM;
+  Clock clock;
   Controls controls;
   unsigned long idx;
   Field field;
@@ -71,7 +76,10 @@ struct State {
   }
 
   unsigned long oneTick() {
-    return 1000000 * 60 / clockBPM / 4 / 4;
+    unsigned long regular = 1000000 * 60 / clock.bpm / 4 / 4;
+    unsigned long dt = regular * clock.swing / 2;
+    bool isEven = idx / 4 % 2 == 0;
+    return isEven ? regular + dt : regular - dt;
   }
 
   bool shouldTick(unsigned long t) {
@@ -79,15 +87,14 @@ struct State {
   }
 
   int tick() {
-    if (isAtStartOf(0)) field = pending;
-    if (controls.isReset()) reset();
+    // if (isAtStartOf(0)) field = pending;
+    // if (controls.isReset()) reset();
+    
     bool clock = (idx % 4) / 2 == 0;
-
-    nextTick += oneTick();
-
     int bits = 1 << 0 | clock << 1;
     for (int i = 0; i < 4; i++) bits |= field.patterns[i].isHighAtIndex(idx) << (i + 2);
-    
+
+    nextTick += oneTick();
     idx = (idx + 1) % State::maxIdx;
 
     return bits;

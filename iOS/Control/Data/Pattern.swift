@@ -19,8 +19,18 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 }
 
 extension Pattern {
-
 	enum DutyCycle: Int, Codable { case off, quarter, half, full }
+}
+
+extension Pattern.DutyCycle {
+	func fold<A>(off: @autoclosure () -> A, quarter: @autoclosure () -> A, half: @autoclosure () -> A, full: @autoclosure () -> A) -> A {
+		switch self {
+		case .off: return off()
+		case .quarter: return quarter()
+		case .half: return half()
+		case .full: return full()
+		}
+	}
 }
 
 extension Pattern: CustomDebugStringConvertible {

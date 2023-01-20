@@ -3,7 +3,7 @@
 const char deviceName[] = "Nano 33 Ctrl";
 BLEService ctrlService("E20A39F4-73F5-4BC4-A12F-17D1AD07A962");
 
-BLEFloatCharacteristic clockBPMCharacteristic("08590F7E-DB05-467E-8757-72F6FAEB13D5", BLERead | BLEWrite | BLEWriteWithoutResponse);
+BLETypedCharacteristic<Clock> clockCharacteristic("08590F7E-DB05-467E-8757-72F6FAEB13D5", BLERead | BLEWrite | BLEWriteWithoutResponse);
 BLETypedCharacteristic<Controls> controlsCharacteristic("08590F7E-DB05-467E-8757-72F6FAEB13D9", BLERead | BLEWrite | BLEWriteWithoutResponse);
 BLETypedCharacteristic<Field> patternCharacteristic("08590F7E-DB05-467E-8757-72F6FAEB13D6", BLERead | BLEWrite | BLEWriteWithoutResponse);
 
@@ -16,7 +16,7 @@ static void initBLE() {
 
     BLE.setAdvertisedService(ctrlService);
 
-    ctrlService.addCharacteristic(clockBPMCharacteristic);
+    ctrlService.addCharacteristic(clockCharacteristic);
     ctrlService.addCharacteristic(controlsCharacteristic);
     ctrlService.addCharacteristic(patternCharacteristic);
 

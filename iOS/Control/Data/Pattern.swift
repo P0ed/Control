@@ -1,4 +1,5 @@
 import Foundation
+import Fx
 
 struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	var rows: Int

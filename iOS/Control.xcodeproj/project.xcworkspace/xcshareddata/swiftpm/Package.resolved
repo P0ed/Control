@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "fx",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/P0ed/Fx",
+      "state" : {
+        "branch" : "master",
+        "revision" : "606e01140b6b30b022293f9eddfd98e49f68f321"
+      }
+    }
+  ],
+  "version" : 2
+}

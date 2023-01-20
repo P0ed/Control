@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import Fx
 
 struct MainView: View {
 	@ObservedObject var model: Model

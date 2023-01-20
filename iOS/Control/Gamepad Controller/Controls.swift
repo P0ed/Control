@@ -34,16 +34,18 @@ struct Controls {
 		static let zero = Thumbstick(x: 0, y: 0)
 	}
 
+	var isValidSequence: Bool { -lastPress.timeIntervalSinceNow < 0.5 }
+
 	mutating func addToSequence(_ button: Buttons) {
-		if -lastPress.timeIntervalSinceNow > 0.5 { sequence = [] }
+		if !isValidSequence { sequence = [] }
 		sequence.append(button)
 		lastPress = .now
 	}
 
 	func matchesSequence(_ combo: [Buttons]) -> Bool {
-		let isPressed = combo.last.map(buttons.contains) ?? true
-		let containsSequence = sequence.dropFirst(max(0, sequence.count - combo.count)).contains(combo)
-		return isPressed && containsSequence
+		isValidSequence && buttons.isEmpty && sequence
+			.dropFirst(max(0, sequence.count - combo.count))
+			.contains(combo)
 	}
 }
 

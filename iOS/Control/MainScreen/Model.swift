@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 import SwiftUI
+import Fx
 
 final class Model: ObservableObject {
 
@@ -32,12 +33,11 @@ final class Model: ObservableObject {
 
 		let mapControl = { controller.$controls.map($0).distinctUntilChanged() as Property<Bool> }
 		let control = { ctrl, pressed in mapControl { $0.buttons.contains(ctrl) }.observe(pressed) }
-		let controlPressed = { ctrl, pressed in control(ctrl, Fn.if(pressed, {})) }
-		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.if(pressed, {})) }
+		let controlPressed = { ctrl, pressed in control(ctrl, Fn.fold(pressed, {})) }
+		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.fold(pressed, {})) }
 		let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = f($0).bpm } }
 
 		lifetime = [
-			$state.sink { [self] state in modify(&store) { $0.state = state } },
 			$controls.sink { [self] in handleControls($0) },
 			transmitter.$isConnected.observe { [self] in isBLEConnected = $0 },
 			controller.$isConnected.observe { [self] in isControllerConnected = $0 },
@@ -74,8 +74,8 @@ final class Model: ObservableObject {
 			sequence([.up, .up, .up, .down, .down, .down], { set(.techno) }),
 			sequence([.up, .up, .up, .down, .down, .right], { set(.lazerpresent) }),
 			sequence([.left, .left, .up, .down, .right, .right], { set(.trance) }),
-			sequence([.left, .left, .left, .left, .left, .left], { set(.hats) }),
-			sequence([.right, .right, .right, .right, .right, .right], { set(.claps) }),
+			sequence([.left, .left, .left, .left, .left, .left], { set(.claps) }),
+			sequence([.right, .right, .right, .right, .right, .right], { set(.hats) }),
 			sequence([.up, .up, .up, .up, .up, .up], { set(.all) }),
 			sequence([.down, .down, .down, .down, .down, .down], { set(.empty) }),
 			sequence([.down, .up, .down, .up, .down, .up], { mod { $0.inverse() } })
@@ -131,7 +131,7 @@ final class Model: ObservableObject {
 			}
 		case .l: if pressed { state.patternIndex = 0 }
 		case .r: if pressed { writeToPattern(0) }
-		case .lr: break
+		case .lr: if pressed { save() }
 		}
 	}
 
@@ -148,7 +148,7 @@ final class Model: ObservableObject {
 			}
 		case .l: if pressed { state.patternIndex = 1 }
 		case .r: if pressed { writeToPattern(1) }
-		case .lr: break
+		case .lr: if pressed { recall() }
 		}
 	}
 
@@ -210,6 +210,17 @@ final class Model: ObservableObject {
 	private func runStop() {
 		state.bleControls.formSymmetricDifference(.run)
 	}
+
+	private func save() {
+		store.state = state
+	}
+
+	private func recall() {
+		modify(&state) { [store] in
+			$0.field = store.field
+			$0.bpm = store.bpm
+		}
+	}
 }
 
 private extension Float {
@@ -232,5 +243,16 @@ extension Model.State {
 			pending = field
 			cursor = 0
 		}
+	}
+}
+
+extension Fn {
+
+	static func fold<A>(_ true: @escaping @autoclosure () -> A, _ false: @escaping @autoclosure () -> A) -> (Bool) -> A {
+		{ $0 ? `true`() : `false`() }
+	}
+
+	static func fold<A>(_ true: @escaping () -> A, _ false: @escaping () -> A) -> (Bool) -> A {
+		{ $0 ? `true`() : `false`() }
 	}
 }

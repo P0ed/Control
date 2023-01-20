@@ -6,6 +6,7 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	var cols: Int
 	var bits: UInt64
 	var isMuted: Bool = false
+	var dutyCycle: DutyCycle = .quarter
 
 	var startIndex: Int { 0 }
 	var endIndex: Int { Int(rows * cols) }
@@ -15,6 +16,11 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 		get { bits & 1 << position != 0 }
 		set { bits = newValue ? bits | 1 << position : bits & ~(1 << position) }
 	}
+}
+
+extension Pattern {
+
+	enum DutyCycle: Int, Codable { case off, quarter, half, full }
 }
 
 extension Pattern: CustomDebugStringConvertible {
@@ -97,8 +103,8 @@ extension Pattern {
 
 	var bleRepresentation: BLEPattern {
 		BLEPattern(
-			count: UInt8(rows * cols),
-			bits: isMuted ? 0 : (0..<rows)
+			count: UInt8(rows * cols) | UInt8(isMuted ? 0 : dutyCycle.rawValue) << 6,
+			bits: (0..<rows)
 				.map { row in rowBits(row) << (cols * row) }
 				.reduce(0, |)
 		)

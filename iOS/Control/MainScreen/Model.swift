@@ -32,6 +32,7 @@ final class Model: ObservableObject {
 		state = _store.value.state
 
 		lifetime = [
+			$controls.sink { [self] in handleControls($0) },
 			transmitter.$isConnected.observe { [self] in isBLEConnected = $0 },
 			controller.$isConnected.observe { [self] in isControllerConnected = $0 },
 			transmitter.$service.observe(handleService),
@@ -194,6 +195,30 @@ final class Model: ObservableObject {
 		}
 	}
 
+	private var offset = (x: 0, y: 0)
+
+	private func handleControls(_ controls: Controls) {
+		if controls.buttons.contains(.cross) {
+			if abs(controls.leftStick.x) > 1 / 255 || abs(controls.leftStick.y) > 1 / 255 {
+				modify(&state.pendingPattern) { ptn in
+					let dx = Int(controls.leftStick.x * Float(ptn.cols - 1))
+					let dy = Int(controls.leftStick.y * Float(ptn.rows - 1))
+					if offset.x != dx || offset.y != dy {
+						ptn.shift(dx - offset.x, direction: .right)
+						ptn.shift(dy - offset.y, direction: .down)
+						offset = (dx, dy)
+					}
+				}
+			}
+		} else if offset.x != 0 || offset.y != 0 {
+			modify(&state.pendingPattern) { ptn in
+				ptn.shift(-offset.x, direction: .right)
+				ptn.shift(-offset.y, direction: .down)
+				offset = (0, 0)
+			}
+		}
+	}
+
 	private func handleTimer() {
 		if controls.rightTrigger > 1 / 255 || controls.leftTrigger > 1 / 255 {
 			if controls.buttons.contains(.square) {
@@ -229,6 +254,11 @@ private extension Float {
 }
 
 extension Model.State {
+
+	var pendingPattern: Pattern {
+		get { pending?[patternIndex] ?? pattern }
+		set { (pending?[patternIndex] = newValue) ?? (pattern = newValue) }
+	}
 
 	var pattern: Pattern {
 		get { field[patternIndex] }

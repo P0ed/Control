@@ -3,18 +3,25 @@ bool isHigh(int value, int bit) {
 }
 
 struct Pattern {
-  unsigned char count;
+  unsigned char count: 6;
+  unsigned char dutyCycle: 2;
   long long bits;
 
   const static struct Pattern empty;
 
   bool isHighAtIndex(int idx) {
-    return isHigh(bits, idx % count);
+    switch (dutyCycle) {
+      case 0: return false;
+      case 1: return isHigh(bits, (idx / 4) % count) && (idx % 4) == 0;
+      case 2: return isHigh(bits, (idx / 4) % count) && (idx / 2 % 2) == 0;
+      case 3: return isHigh(bits, (idx / 4) % count);
+    }
   }
 };
 
 const struct Pattern Pattern::empty = {
   .count = 16,
+  .dutyCycle = 1,
   .bits = 0
 };
 
@@ -76,10 +83,11 @@ struct State {
     if (controls.isReset()) reset();
     bool clock = (idx % 4) / 2 == 0;
 
-    int bits = 1 << 0 | clock << 1;
-    for (int i = 0; i < 4; i++) bits |= (field.patterns[i].isHighAtIndex(idx >> 2) && (idx % 4) == 0) << (i + 2);
-
     nextTick += oneTick();
+
+    int bits = 1 << 0 | clock << 1;
+    for (int i = 0; i < 4; i++) bits |= field.patterns[i].isHighAtIndex(idx) << (i + 2);
+    
     idx = (idx + 1) % State::maxIdx;
 
     return bits;

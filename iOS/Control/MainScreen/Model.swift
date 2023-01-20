@@ -31,29 +31,12 @@ final class Model: ObservableObject {
 	init(transmitter: BLETransmitter, controller: Controller) {
 		state = _store.value.state
 
-		let mapControl = { controller.$controls.map($0).distinctUntilChanged() as Property<Bool> }
-		let control = { ctrl, pressed in mapControl { $0.buttons.contains(ctrl) }.observe(pressed) }
-		let controlPressed = { ctrl, pressed in control(ctrl, Fn.fold(pressed, {})) }
-		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.fold(pressed, {})) }
-		let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = f($0).bpm } }
-
 		lifetime = [
-			$controls.sink { [self] in handleControls($0) },
 			transmitter.$isConnected.observe { [self] in isBLEConnected = $0 },
 			controller.$isConnected.observe { [self] in isControllerConnected = $0 },
 			transmitter.$service.observe(handleService),
 			controller.$controls.observe { [self] in controls = $0 },
-			anyPressed(.dPad) { [self] in isModified = true },
-			anyPressed(.dPad, handleDPad),
-			controlPressed([.up, .square]) { setBPM { round($0 / 10) * 10 + 10 } },
-			controlPressed([.down, .square]) { setBPM { round($0 / 10) * 10 - 10 } },
-			controlPressed([.left, .square]) { setBPM { $0 * 3 / 4 } },
-			controlPressed([.right, .square]) { setBPM { $0 * 4 / 3 } },
-			control(.cross, handleCross),
-			control(.circle, handleCircle),
-			control(.square, handleSquare),
-			control(.triangle, handleTriangle),
-			controlPressed(.scan, transmitter.scan),
+			controls(controller: controller, transmitter: transmitter),
 			combos(controller: controller),
 			Timer.repeat(1 / 16, handleTimer)
 		]
@@ -82,8 +65,26 @@ final class Model: ObservableObject {
 		]
 	}
 
-	private func handleControls(_ controls: Controls) {
+	private func controls(controller: Controller, transmitter: BLETransmitter) -> Any {
+		let mapControl = { controller.$controls.map($0).distinctUntilChanged() as Property<Bool> }
+		let control = { ctrl, pressed in mapControl { $0.buttons.contains(ctrl) }.observe(pressed) }
+		let controlPressed = { ctrl, pressed in control(ctrl, Fn.fold(pressed, {})) }
+		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.fold(pressed, {})) }
+		let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = f($0).bpm } }
 
+		return [
+			anyPressed(.dPad) { [self] in isModified = true },
+			anyPressed(.dPad, handleDPad),
+			controlPressed([.up, .square]) { setBPM { round($0 / 10) * 10 + 10 } },
+			controlPressed([.down, .square]) { setBPM { round($0 / 10) * 10 - 10 } },
+			controlPressed([.left, .square]) { setBPM { $0 * 3 / 4 } },
+			controlPressed([.right, .square]) { setBPM { $0 * 4 / 3 } },
+			control(.cross, handleCross),
+			control(.circle, handleCircle),
+			control(.square, handleSquare),
+			control(.triangle, handleTriangle),
+			controlPressed(.scan, transmitter.scan)
+		]
 	}
 
 	private var handleService: (BLETransmitter.Service?) -> Void {

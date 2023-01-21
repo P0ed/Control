@@ -3,15 +3,14 @@ bool isHigh(int value, int bit) {
 }
 
 struct Pattern {
-  unsigned char count: 6;
-  unsigned char dutyCycle: 2;
   long long bits;
+  unsigned char count;
 
   const static struct Pattern empty;
 
-  bool isHighAtIndex(int idx) {
+  bool isHighAtIndex(int idx, int dutyCycle) {
     switch (dutyCycle) {
-      case 0: return false;
+      case 0:
       case 1: return isHigh(bits, (idx / 4) % count) && (idx % 4) == 0;
       case 2: return isHigh(bits, (idx / 4) % count) && (idx / 2 % 2) == 0;
       case 3: return isHigh(bits, (idx / 4) % count);
@@ -20,15 +19,17 @@ struct Pattern {
 };
 
 const struct Pattern Pattern::empty = {
-  .count = 16,
-  .dutyCycle = 1,
-  .bits = 0
+  .bits = 0,
+  .count = 16
 };
 
 struct Field {
   Pattern patterns[4];
+  unsigned char options;
 
   const static struct Field empty;
+
+  unsigned char optionsAt(int idx) { return (options >> idx) & 3; }
 };
 
 const struct Field Field::empty = {
@@ -68,6 +69,9 @@ struct State {
   unsigned long idx;
   Field field;
   Field pending;
+  
+  int trigs;
+  unsigned long trigsLifetime;
 
   const static unsigned long maxIdx;
 
@@ -85,19 +89,37 @@ struct State {
   bool shouldTick(unsigned long t) {
     return t >= nextTick && (t & 1 << 31) == (nextTick & 1 << 31);
   }
+  bool hasExpiredTrigs(unsigned long t) {
+    return trigs && t >= trigsLifetime && (t & 1 << 31) == (trigsLifetime & 1 << 31);
+  }
 
-  int tick() {
-    // if (isAtStartOf(0)) field = pending;
-    // if (controls.isReset()) reset();
+  int tick(unsigned long t) {
+    if (isAtStartOf(0)) field = pending;
+    if (controls.isReset()) reset();
     
     bool clock = (idx % 4) / 2 == 0;
     int bits = 1 << 0 | clock << 1;
-    for (int i = 0; i < 4; i++) bits |= field.patterns[i].isHighAtIndex(idx) << (i + 2);
+    int tgs = 0;
+    for (int i = 0; i < 4; i++) {
+      unsigned char options = field.optionsAt(i);
+      bool isHigh = field.patterns[i].isHighAtIndex(idx, options);
+      tgs |= (isHigh && options == 0) << (i + 2);
+      bits |= isHigh << (i + 2);
+    }
+
+    trigs = tgs;
+    if (tgs) trigsLifetime = t + 15000;
 
     nextTick += oneTick();
     idx = (idx + 1) % State::maxIdx;
 
     return bits;
+  }
+
+  int consumeTrigs() {
+    int t = trigs;
+    trigs = 0;
+    return t;
   }
 
   void start(unsigned long t) {
@@ -111,4 +133,16 @@ struct State {
   }
 };
 
-const unsigned long State::maxIdx = 40320 << 2;
+State state = {
+  .isRunning = false,
+  .nextTick = 0,
+  .clock = { .bpm = 0, .swing = 0 },
+  .controls = { 0 },
+  .idx = 0,
+  .field = Field::empty,
+  .pending = Field::empty,
+  .trigs = 0,
+  .trigsLifetime = 0
+};
+
+const unsigned long State::maxIdx = 40320 << 5;

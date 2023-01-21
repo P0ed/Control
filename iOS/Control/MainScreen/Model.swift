@@ -5,18 +5,7 @@ import Fx
 
 final class Model: ObservableObject {
 
-	struct State {
-		var bpm: Float
-		var swing: Float = 0
-		var bleControls: BLEControls = [.changePattern]
-		var field: Field
-		var patternIndex: Int = 0
-
-		var pending: Field?
-		var cursor: Int?
-	}
-
-	@IO(.store(key: "state", fallback: .initial))
+	@IO(.store(key: "state", fallback: .init()))
 	private var store: StoredState
 
 	@Published private(set) var state: State
@@ -134,8 +123,8 @@ final class Model: ObservableObject {
 				}
 			}
 		case .l: if pressed { state.patternIndex = 0 }
-		case .r: if pressed { writeToPattern(0) }
-		case .lr: if pressed { save() }
+		case .r: if pressed { save() }
+		case .lr: if pressed { writeToPattern(0) }
 		}
 	}
 
@@ -149,16 +138,16 @@ final class Model: ObservableObject {
 				if pressed {
 					switch controls.buttons.dPadDirection {
 					case .none: state.pattern.isMuted.toggle()
-					case .down: state.pattern.dutyCycle = .off
-					case .left: state.pattern.dutyCycle = .quarter
-					case .right: state.pattern.dutyCycle = .half
-					case .up: state.pattern.dutyCycle = .full
+					case .down: state.pattern.options.dutyCycle = .trig
+					case .left: state.pattern.options.dutyCycle = .quarter
+					case .right: state.pattern.options.dutyCycle = .half
+					case .up: state.pattern.options.dutyCycle = .full
 					}
 				}
 			}
 		case .l: if pressed { state.patternIndex = 1 }
-		case .r: if pressed { writeToPattern(1) }
-		case .lr: if pressed { recall() }
+		case .r: if pressed { recall() }
+		case .lr: if pressed { writeToPattern(1) }
 		}
 	}
 
@@ -175,8 +164,8 @@ final class Model: ObservableObject {
 				if pressed { state.bleControls.formSymmetricDifference(.changePattern) }
 			}
 		case .l: if pressed { state.patternIndex = 2 }
-		case .r: if pressed { writeToPattern(2) }
-		case .lr: break
+		case .r: break
+		case .lr: if pressed { writeToPattern(2) }
 		}
 	}
 
@@ -189,8 +178,8 @@ final class Model: ObservableObject {
 				state.toggleCursor()
 			}
 		case .l: if pressed { state.patternIndex = 3 }
-		case .r: if pressed { writeToPattern(3) }
-		case .lr: break
+		case .r: break
+		case .lr: if pressed { writeToPattern(3) }
 		}
 	}
 
@@ -264,44 +253,5 @@ final class Model: ObservableObject {
 			$0.bpm = store.bpm
 			$0.swing = store.swing
 		}
-	}
-}
-
-private extension Float {
-	var bpm: Float { min(max(self, 0), 420) }
-}
-
-extension Model.State {
-
-	var pendingPattern: Pattern {
-		get { pending?[patternIndex] ?? pattern }
-		set { (pending?[patternIndex] = newValue) ?? (pattern = newValue) }
-	}
-
-	var pattern: Pattern {
-		get { field[patternIndex] }
-		set { field[patternIndex] = newValue }
-	}
-
-	mutating func toggleCursor() {
-		if let next = pending {
-			field = next
-			pending = nil
-			cursor = nil
-		} else {
-			pending = field
-			cursor = 0
-		}
-	}
-}
-
-extension Fn {
-
-	static func fold<A>(_ true: @escaping @autoclosure () -> A, _ false: @escaping @autoclosure () -> A) -> (Bool) -> A {
-		{ $0 ? `true`() : `false`() }
-	}
-
-	static func fold<A>(_ true: @escaping () -> A, _ false: @escaping () -> A) -> (Bool) -> A {
-		{ $0 ? `true`() : `false`() }
 	}
 }

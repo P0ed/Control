@@ -1,15 +1,17 @@
 import Foundation
 
 struct Field: Codable {
-	var a: Pattern
-	var b: Pattern
-	var c: Pattern
-	var d: Pattern
+	var a: Pattern = .empty
+	var b: Pattern = .empty
+	var c: Pattern = .empty
+	var d: Pattern = .empty
+}
+
+struct PatternOptions: Codable {
+	var dutyCycle: DutyCycle = .trig
 }
 
 extension Field {
-
-	static let empty = Field(a: .empty, b: .empty, c: .empty, d: .empty)
 
 	subscript(_ idx: Int) -> Pattern {
 		get {
@@ -39,8 +41,16 @@ extension Field {
 			a: a.bleRepresentation,
 			b: b.bleRepresentation,
 			c: c.bleRepresentation,
-			d: d.bleRepresentation
+			d: d.bleRepresentation,
+			options: bleOptions
 		)
+	}
+
+	private var bleOptions: UInt8 {
+		UInt8(a.options.dutyCycle.rawValue) << 0
+		| UInt8(b.options.dutyCycle.rawValue) << 2
+		| UInt8(c.options.dutyCycle.rawValue) << 4
+		| UInt8(d.options.dutyCycle.rawValue) << 6
 	}
 }
 
@@ -49,4 +59,5 @@ struct BLEField: Equatable {
 	var b: BLEPattern
 	var c: BLEPattern
 	var d: BLEPattern
+	var options: UInt8
 }

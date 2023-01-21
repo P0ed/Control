@@ -102,6 +102,6 @@ struct BLEClock: Hashable {
 	var swing: Float
 }
 
-extension Model.State {
+extension State {
 	var bleClock: BLEClock { BLEClock(bpm: bpm, swing: swing) }
 }

@@ -5,8 +5,9 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	var rows: Int
 	var cols: Int
 	var bits: UInt64
+
 	var isMuted: Bool = false
-	var dutyCycle: DutyCycle = .quarter
+	var options: PatternOptions = .init()
 
 	var startIndex: Int { 0 }
 	var endIndex: Int { Int(rows * cols) }
@@ -18,14 +19,12 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	}
 }
 
-extension Pattern {
-	enum DutyCycle: Int, Codable { case off, quarter, half, full }
-}
+enum DutyCycle: Int, Codable { case trig, quarter, half, full }
 
-extension Pattern.DutyCycle {
-	func fold<A>(off: @autoclosure () -> A, quarter: @autoclosure () -> A, half: @autoclosure () -> A, full: @autoclosure () -> A) -> A {
+extension DutyCycle {
+	func fold<A>(trig: @autoclosure () -> A, quarter: @autoclosure () -> A, half: @autoclosure () -> A, full: @autoclosure () -> A) -> A {
 		switch self {
-		case .off: return off()
+		case .trig: return trig()
 		case .quarter: return quarter()
 		case .half: return half()
 		case .full: return full()
@@ -113,10 +112,10 @@ extension Pattern {
 
 	var bleRepresentation: BLEPattern {
 		BLEPattern(
-			count: UInt8(rows * cols) | UInt8(isMuted ? 0 : dutyCycle.rawValue) << 6,
-			bits: (0..<rows)
+			bits: isMuted ? 0 : (0..<rows)
 				.map { row in rowBits(row) << (cols * row) }
-				.reduce(0, |)
+				.reduce(0, |),
+			count: UInt8(rows * cols)
 		)
 	}
 }
@@ -145,6 +144,6 @@ extension Pattern {
 }
 
 struct BLEPattern: Equatable {
-	var count: UInt8
 	var bits: UInt64
+	var count: UInt8
 }

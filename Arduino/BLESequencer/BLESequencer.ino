@@ -2,16 +2,6 @@
 #include "ble.h"
 #include "nrf.h"
 
-State state = {
-  .isRunning = false,
-  .nextTick = 0,
-  .clock = { .bpm = 0, .swing = 0 },
-  .controls = { 0 },
-  .idx = 0,
-  .field = Field::empty,
-  .pending = Field::empty
-};
-
 int pins[6] = { 4, 5, 30, 29, 31, 2 };
 int ledPin = 13;
 
@@ -22,6 +12,12 @@ void directWrite(int value) {
   for (int i = 0; i < 6; i++) set |= isHigh(value, i) << pins[i];
   if (clr) NRF_P0->OUTCLR = clr;
   if (set) NRF_P0->OUTSET = set;
+}
+
+void directClear(int value) {
+  int clr = !isHigh(value, 1) << ledPin;
+  for (int i = 0; i < 6; i++) clr |= !isHigh(value, i) << pins[i];
+  if (clr) NRF_P0->OUTCLR = clr;
 }
 
 void setup() {
@@ -47,7 +43,8 @@ void runClockIfNeeded(unsigned long t) {
 
 void run(unsigned long t) {
   if (!state.isRunning) state.start(t);
-  if (state.shouldTick(t)) directWrite(state.tick());
+  if (state.shouldTick(t)) directWrite(state.tick(t));
+  if (state.hasExpiredTrigs(t)) directClear(state.consumeTrigs());
 }
 
 void stop() {

@@ -11,21 +11,25 @@ struct MainView: View {
 			VStack {
 				Spacer()
 				Spacer()
-				status
+				global
 				Spacer()
-				PatternView(
-					pattern: model.state.pending?[model.state.patternIndex] ?? model.state.field[model.state.patternIndex],
-					idx: model.state.cursor
-				)
+				pattern
 				Spacer()
-				bpm
+				patternStatus
 				Spacer()
 				Spacer()
 			}
 		}
 	}
 
-	var status: some View {
+	var pattern: some View {
+		PatternView(
+			pattern: model.state.pending?[model.state.patternIndex] ?? model.state.field[model.state.patternIndex],
+			idx: model.state.cursor
+		)
+	}
+
+	var patternStatus: some View {
 		VStack {
 			Text("\(model.state.patternIndex)")
 				.font(.system(.largeTitle, design: .monospaced))
@@ -34,8 +38,8 @@ struct MainView: View {
 				.font(.system(.largeTitle, design: .monospaced))
 				.foregroundColor(model.state.bleControls.contains(.changePattern) ? .clear : .text)
 
-			let dutyCycle = model.state.pendingPattern.dutyCycle.fold(
-				off: "o", quarter: "q", half: "h", full: "f"
+			let dutyCycle = model.state.pattern.options.dutyCycle.fold(
+				trig: "t", quarter: "q", half: "h", full: "f"
 			)
 			Text(dutyCycle)
 				.font(.system(.largeTitle, design: .monospaced))
@@ -43,7 +47,7 @@ struct MainView: View {
 		}
 	}
 
-	var bpm: some View {
+	var global: some View {
 		VStack {
 			let bpmHidden = model.state.bpm == 0 || !model.state.bleControls.contains(.run)
 			let swingHidden = bpmHidden || model.state.swing == 0

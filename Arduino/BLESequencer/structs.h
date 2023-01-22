@@ -1,15 +1,16 @@
-bool isHigh(int value, int bit) {
+bool isHigh(unsigned long long value, int bit) {
   return value & 1 << bit;
 }
 
 struct Pattern {
   long long bits;
   unsigned char count;
+  unsigned char options;
 
   const static struct Pattern empty;
 
-  bool isHighAtIndex(int idx, int dutyCycle) {
-    switch (dutyCycle) {
+  bool isHighAtIndex(int idx) {
+    switch (options) {
       case 0:
       case 1: return isHigh(bits, (idx / 4) % count) && (idx % 4) == 0;
       case 2: return isHigh(bits, (idx / 4) % count) && (idx / 2 % 2) == 0;
@@ -25,11 +26,8 @@ const struct Pattern Pattern::empty = {
 
 struct Field {
   Pattern patterns[4];
-  unsigned char options;
 
   const static struct Field empty;
-
-  unsigned char optionsAt(int idx) { return (options >> (idx * 2)) & 3; }
 };
 
 const struct Field Field::empty = {
@@ -69,18 +67,19 @@ struct State {
   unsigned long idx;
   Field field;
   Field pending;
-  
+
   int trigs;
   unsigned long trigsLifetime;
 
   const static unsigned long maxIdx;
 
   bool isAtStartOf(int ptnIdx) {
-    return idx % 4 == 0 && (idx >> 2) % field.patterns[ptnIdx].count == 0;
+    return idx % 4 == 0 && (idx / 4) % field.patterns[ptnIdx].count == 0;
   }
 
   unsigned long oneTick() {
     unsigned long regular = 1000000 * 60 / clock.bpm / 4 / 4;
+    return regular;
     unsigned long dt = regular * clock.swing / 2;
     bool isEven = idx / 4 % 2 == 0;
     return isEven ? regular + dt : regular - dt;
@@ -96,14 +95,13 @@ struct State {
   int tick(unsigned long t) {
     if (isAtStartOf(0)) field = pending;
     if (controls.isReset()) reset();
-    
+
     bool clock = (idx % 4) / 2 == 0;
     int bits = 1 << 0 | clock << 1;
     int tgs = 0;
     for (int i = 0; i < 4; i++) {
-      unsigned char options = field.optionsAt(i);
-      bool isHigh = field.patterns[i].isHighAtIndex(idx, options);
-      tgs |= (isHigh && options == 0) << (i + 2);
+      bool isHigh = field.patterns[i].isHighAtIndex(idx);
+      tgs |= (isHigh && field.patterns[i].options == 0) << (i + 2);
       bits |= isHigh << (i + 2);
     }
 
@@ -130,6 +128,7 @@ struct State {
   void reset() {
     isRunning = false;
     idx = 0;
+    trigs = 0;    
   }
 };
 

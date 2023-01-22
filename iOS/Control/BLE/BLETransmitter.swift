@@ -30,7 +30,7 @@ final class Transmitter {
 		var cm = CBCentralManager(delegate: cmd, queue: .main)
 		var peripheral: CBPeripheral?
 
-		let setup = { [_service] in
+		reconnect = { [_service] in
 			cm = CBCentralManager(delegate: cmd, queue: .main)
 			peripheral = nil
 			_service.value = nil
@@ -44,7 +44,6 @@ final class Transmitter {
 				options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
 			)
 		}
-		reconnect = scan • setup
 
 		cmd.didUpdateState = { [scan] cm in
 			guard cm.state == .poweredOn else { return print("Central is not powered on") }

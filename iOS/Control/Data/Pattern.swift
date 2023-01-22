@@ -8,6 +8,7 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 
 	var isMuted: Bool = false
 	var options: PatternOptions = .init()
+	var euclidean: Int = 0
 
 	var startIndex: Int { 0 }
 	var endIndex: Int { Int(rows * cols) }
@@ -16,19 +17,6 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	subscript(position: Int) -> Bool {
 		get { bits & 1 << position != 0 }
 		set { bits = newValue ? bits | 1 << position : bits & ~(1 << position) }
-	}
-}
-
-enum DutyCycle: Int, Codable { case trig, quarter, half, full }
-
-extension DutyCycle {
-	func fold<A>(trig: @autoclosure () -> A, quarter: @autoclosure () -> A, half: @autoclosure () -> A, full: @autoclosure () -> A) -> A {
-		switch self {
-		case .trig: return trig()
-		case .quarter: return quarter()
-		case .half: return half()
-		case .full: return full()
-		}
 	}
 }
 
@@ -109,18 +97,9 @@ extension Pattern {
 	func rowBits(_ row: Int) -> UInt64 {
 		(mask(row: row) & bits) >> (row * 8)
 	}
-
-	var bleRepresentation: BLEPattern {
-		BLEPattern(
-			bits: isMuted ? 0 : (0..<rows)
-				.map { row in rowBits(row) << (cols * row) }
-				.reduce(0, |),
-			count: UInt8(rows * cols)
-		)
-	}
 }
 
-private extension Pattern {
+extension Pattern {
 
 	static func mask(range: Range<Int>) -> UInt64 {
 		range.count == 64 ? .max : UInt64((1 << range.count) - 1) << range.lowerBound
@@ -141,9 +120,4 @@ extension Pattern {
 	static let all = Pattern(bits: 0b1111_1111_1111_1111 as UInt16)
 	static let empty = Pattern(bits: 0 as UInt16)
 	static let lazerpresent = Pattern(rows: 4, cols: 8, bits: 0b0001_0001_0001_0001 | (0b0000_0100_1001_0001 << 16))
-}
-
-struct BLEPattern: Equatable {
-	var bits: UInt64
-	var count: UInt8
 }

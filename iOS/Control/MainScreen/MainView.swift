@@ -44,6 +44,10 @@ struct MainView: View {
 			Text(dutyCycle)
 				.font(.system(.largeTitle, design: .monospaced))
 				.foregroundColor(.text)
+
+			Text("\(model.state.pattern.euclidean)")
+				.font(.system(.largeTitle, design: .monospaced))
+				.foregroundColor(model.state.pattern.euclidean == 0 ? .clear : .text)
 		}
 	}
 

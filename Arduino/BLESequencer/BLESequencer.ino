@@ -15,8 +15,8 @@ void directWrite(int value) {
 }
 
 void directClear(int value) {
-  int clr = !isHigh(value, 1) << ledPin;
-  for (int i = 0; i < 6; i++) clr |= !isHigh(value, i) << pins[i];
+  int clr = isHigh(value, 1) << ledPin;
+  for (int i = 0; i < 6; i++) clr |= isHigh(value, i) << pins[i];
   if (clr) NRF_P0->OUTCLR = clr;
 }
 

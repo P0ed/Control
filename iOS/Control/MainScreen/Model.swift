@@ -125,6 +125,14 @@ final class Model: ObservableObject {
 				if pressed, let idx = state.cursor {
 					state.pending = modify(field) { $0[state.patternIndex][idx].toggle() }
 				}
+			} else if pressed {
+				switch controls.buttons.dPadDirection {
+				case .none: break
+				case .down: state.pattern.decEuclidean()
+				case .up: state.pattern.incEuclidean()
+				case .left: break
+				case .right: break
+				}
 			}
 		case .l: if pressed { state.patternIndex = 0 }
 		case .r: if pressed { save() }

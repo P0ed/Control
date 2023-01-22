@@ -26,10 +26,10 @@ extension Color {
 	static let bleDisconnected = Color(.sRGB, red: 0.1, green: 0.11, blue: 0.19, opacity: 1)
 	static let controllerDisconnected = Color(.sRGB, red: 0.2, green: 0.11, blue: 0.13, opacity: 1)
 
-	static let cellOff = Color(.sRGB, red: 0.28, green: 0.33, blue: 0.34, opacity: 0.8)
-	static let cellOn = Color(.sRGB, red: 0.5, green: 0.66, blue: 0.83, opacity: 0.8)
-	static let cellMuted = Color(.sRGB, red: 0.39, green: 0.52, blue: 0.62, opacity: 0.8)
-	static let cellSelected = Color(.sRGB, red: 0.81, green: 0.76, blue: 0.68, opacity: 0.8)
+	static let cellOff = Color(.sRGB, red: 0.26, green: 0.29, blue: 0.31, opacity: 0.8)
+	static let cellOn = Color(.sRGB, red: 0.59, green: 0.69, blue: 0.86, opacity: 0.9)
+	static let cellMuted = Color(.sRGB, red: 0.53, green: 0.42, blue: 0.58, opacity: 0.9)
+	static let cellSelected = Color(.sRGB, red: 0.81, green: 0.79, blue: 0.68, opacity: 0.9)
 
 	static let text = Color(.sRGB, red: 0.94, green: 0.96, blue: 0.99, opacity: 1)
 

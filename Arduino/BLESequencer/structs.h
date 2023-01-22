@@ -29,7 +29,7 @@ struct Field {
 
   const static struct Field empty;
 
-  unsigned char optionsAt(int idx) { return (options >> idx) & 3; }
+  unsigned char optionsAt(int idx) { return (options >> (idx * 2)) & 3; }
 };
 
 const struct Field Field::empty = {

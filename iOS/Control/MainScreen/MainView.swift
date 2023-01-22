@@ -58,7 +58,7 @@ struct MainView: View {
 
 			Text("\(String(format: "%.1f", model.state.bpm))")
 				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(bpmHidden ? .clear : .text)
+				.foregroundColor(bpmHidden ? .text.opacity(0.2) : .text)
 			Text("\(String(format: "%.0f%", model.state.swing * 50))")
 				.font(.system(.largeTitle, design: .monospaced))
 				.foregroundColor(swingHidden ? .clear : .text)

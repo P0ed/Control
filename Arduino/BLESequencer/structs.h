@@ -1,20 +1,20 @@
-bool isHigh(unsigned long long value, int bit) {
-  return value & 1 << bit;
+bool isHigh(long long value, int bit) {
+  return value & (1LL << bit);
 }
 
 struct Pattern {
   long long bits;
-  unsigned char count;
-  unsigned char options;
+  char count;
+  char options;
 
   const static struct Pattern empty;
 
   bool isHighAtIndex(int idx) {
     switch (options) {
       case 0:
-      case 1: return isHigh(bits, (idx / 4) % count) && (idx % 4) == 0;
-      case 2: return isHigh(bits, (idx / 4) % count) && (idx / 2 % 2) == 0;
-      case 3: return isHigh(bits, (idx / 4) % count);
+      case 1: return isHigh(bits, (idx / 4) % (int)count) && (idx % 4) == 0;
+      case 2: return isHigh(bits, (idx / 4) % (int)count) && (idx / 2 % 2) == 0;
+      case 3: return isHigh(bits, (idx / 4) % (int)count);
     }
   }
 };
@@ -50,10 +50,6 @@ const struct Controls Controls::run = {1 << 0};
 const struct Controls Controls::reset = {1 << 1};
 const struct Controls Controls::changePattern = {1 << 2};
 
-bool operator &(Controls lhs, Controls rhs) {
-  return lhs.bits & rhs.bits;
-}
-
 struct Clock {
   float bpm;
   float swing;
@@ -64,14 +60,14 @@ struct State {
   unsigned long nextTick;
   Clock clock;
   Controls controls;
-  unsigned long idx;
+  int idx;
   Field field;
   Field pending;
 
   int trigs;
   unsigned long trigsLifetime;
 
-  const static unsigned long maxIdx;
+  const static int maxIdx;
 
   bool isAtStartOf(int ptnIdx) {
     return idx % 4 == 0 && (idx / 4) % field.patterns[ptnIdx].count == 0;
@@ -79,7 +75,6 @@ struct State {
 
   unsigned long oneTick() {
     unsigned long regular = 1000000 * 60 / clock.bpm / 4 / 4;
-    return regular;
     unsigned long dt = regular * clock.swing / 2;
     bool isEven = idx / 4 % 2 == 0;
     return isEven ? regular + dt : regular - dt;
@@ -144,4 +139,4 @@ State state = {
   .trigsLifetime = 0
 };
 
-const unsigned long State::maxIdx = 40320 << 5;
+const int State::maxIdx = 40320 << 5;

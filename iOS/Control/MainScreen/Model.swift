@@ -65,17 +65,10 @@ final class Model: ObservableObject {
 	private var controlsMap: Any {
 		let mapControl = { [controller] in controller.$controls.map($0).distinctUntilChanged() as Property<Bool> }
 		let control = { ctrl, pressed in mapControl { $0.buttons.contains(ctrl) }.observe(pressed) }
-		let controlPressed = { ctrl, pressed in control(ctrl, Fn.fold(pressed, {})) }
 		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.fold(pressed, {})) }
-		let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = f($0).bpm } }
 
 		return [
-			anyPressed(.dPad) { [self] in isModified = true },
-			anyPressed(.dPad, handleDPad),
-			controlPressed([.up, .square]) { setBPM { round($0 / 10) * 10 + 10 } },
-			controlPressed([.down, .square]) { setBPM { round($0 / 10) * 10 - 10 } },
-			controlPressed([.left, .square]) { setBPM { $0 * 3 / 4 } },
-			controlPressed([.right, .square]) { setBPM { $0 * 4 / 3 } },
+			anyPressed(.dPad, { self.isModified = true } • handleDPad),
 			control(.cross, handleCross),
 			control(.circle, handleCircle),
 			control(.square, handleSquare),
@@ -84,7 +77,7 @@ final class Model: ObservableObject {
 	}
 
 	private var handleService: (Transmitter.Service?) -> Void {
-		{ [unowned self, subscription = SerialDisposable()] service in
+		{ [self, subscription = SerialDisposable()] service in
 			subscription.innerDisposable = service.map { service in
 				let pattern = $state.map(\.field.bleRepresentation).removeDuplicates().sink(receiveValue: service.setPattern)
 				let controls = $state.map(\.bleControls).removeDuplicates().sink(receiveValue: service.setControls)
@@ -169,7 +162,18 @@ final class Model: ObservableObject {
 			if state.pending == nil {
 				if pressed {
 					isModified = false
-				} else if !isModified {
+
+					if let direction = controls.buttons.dPadDirection {
+						let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = f($0).bpm } }
+
+						switch direction {
+						case .down: setBPM { round($0 / 10) * 10 - 10 }
+						case .left: setBPM { $0 * 3 / 4 }
+						case .right: setBPM { $0 * 4 / 3 }
+						case .up: setBPM { round($0 / 10) * 10 + 10 }
+						}
+					}
+				} else if !isModified, controls.buttons.dPadDirection == nil {
 					runStop()
 				}
 			} else {

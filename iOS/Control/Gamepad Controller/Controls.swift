@@ -22,7 +22,6 @@ struct Controls {
 		static let circle = Buttons(rawValue: 1 << 7)
 		static let square = Buttons(rawValue: 1 << 8)
 		static let triangle = Buttons(rawValue: 1 << 9)
-		static let scan = Buttons(rawValue: 1 << 10)
 
 		static let dPad = Buttons([.up, .down, .left, .right])
 	}

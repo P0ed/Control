@@ -41,7 +41,7 @@ final class Controller {
 			}
 
 			let mapControl: (GCControllerButtonInput, Controls.Buttons) -> Void = { button, control in
-				button.valueChangedHandler = { _, _, pressed in
+				button.pressedChangedHandler = { _, _, pressed in
 					_controls.modify {
 						if pressed {
 							$0.buttons.insert(control)
@@ -63,7 +63,6 @@ final class Controller {
 			mapControl(gamepad.rightShoulder, .shiftRight)
 			mapControl(gamepad.buttonX, .square)
 			mapControl(gamepad.buttonY, .triangle)
-			mapControl(gamepad.buttonMenu, .scan)
 		}
 
 		lifetime = AnyCancellable { capture([observers, handlers]) }

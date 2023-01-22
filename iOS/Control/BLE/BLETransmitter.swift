@@ -2,7 +2,7 @@ import CoreBluetooth
 import Combine
 import Fx
 
-final class BLETransmitter {
+final class Transmitter {
 
 	struct Service {
 		var peripheral: CBPeripheral
@@ -19,14 +19,22 @@ final class BLETransmitter {
 	var isConnected: Bool
 
 	let scan: () -> Void
+	let reconnect: () -> Void
 
 	init() {
 		_isConnected = _service.map { $0 != nil }
 
 		let cmd = CentralManagerDelegate()
 		let pd = PeripheralDelegate()
-		let cm = CBCentralManager(delegate: cmd, queue: .main)
+
+		var cm = CBCentralManager(delegate: cmd, queue: .main)
 		var peripheral: CBPeripheral?
+
+		let setup = { [_service] in
+			cm = CBCentralManager(delegate: cmd, queue: .main)
+			peripheral = nil
+			_service.value = nil
+		}
 
 		lifetime = AnyCancellable { capture([cm, cmd, pd, peripheral]) }
 
@@ -36,6 +44,7 @@ final class BLETransmitter {
 				options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
 			)
 		}
+		reconnect = scan • setup
 
 		cmd.didUpdateState = { [scan] cm in
 			guard cm.state == .poweredOn else { return print("Central is not powered on") }
@@ -58,7 +67,7 @@ final class BLETransmitter {
 			try? p.discoverCharacteristics(nil, for: unwrap(p.services?.first))
 		}
 		pd.didDiscoverCharacteristicsFor = { [_service] p, s, e in
-			_service.value = try? BLETransmitter.Service(
+			_service.value = try? Transmitter.Service(
 				peripheral: p,
 				characteristics: s.characteristics ?? []
 			)
@@ -67,13 +76,13 @@ final class BLETransmitter {
 	}
 }
 
-extension BLETransmitter.Service {
+extension Transmitter.Service {
 
 	init(peripheral: CBPeripheral, characteristics: [CBCharacteristic]) throws {
 		let find: (CBUUID) throws -> CBCharacteristic = { uuid in
 			try unwrap(characteristics.first(where: { $0.uuid == uuid }))
 		}
-		self = try BLETransmitter.Service(
+		self = try Transmitter.Service(
 			peripheral: peripheral,
 			clockBPM: find(.clockBPM),
 			pattern: find(.pattern),

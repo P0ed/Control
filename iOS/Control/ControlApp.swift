@@ -3,7 +3,7 @@ import Combine
 
 @main
 struct ControlApp: App {
-	var transmitter = BLETransmitter()
+	var transmitter = Transmitter()
 	var controller = Controller()
 
 	var body: some Scene {

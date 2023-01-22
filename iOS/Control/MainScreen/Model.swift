@@ -4,6 +4,8 @@ import SwiftUI
 import Fx
 
 final class Model: ObservableObject {
+	private let transmitter: Transmitter
+	private let controller: Controller
 
 	@IO(.store(key: "state", fallback: .init()))
 	private var store: StoredState
@@ -18,7 +20,10 @@ final class Model: ObservableObject {
 
 	@IO private var isModified = true
 
-	init(transmitter: BLETransmitter, controller: Controller) {
+	init(transmitter: Transmitter, controller: Controller) {
+		self.transmitter = transmitter
+		self.controller = controller
+
 		state = _store.value.state
 
 		lifetime = [
@@ -27,16 +32,16 @@ final class Model: ObservableObject {
 			controller.$isConnected.observe { self.isControllerConnected = $0 },
 			transmitter.$service.observe(handleService),
 			controller.$controls.observe { self.controls = $0 },
-			controls(controller: controller, transmitter: transmitter),
-			combos(controller: controller),
+			controlsMap,
+			combos,
 			Timer.repeat(1 / 16, handleTimer)
 		]
 
 		UIApplication.shared.isIdleTimerDisabled = true
 	}
 
-	private func combos(controller: Controller) -> Any {
-		let sequence = { (pattern: [Controls.Buttons], sink: @escaping () -> Void) -> Disposable in
+	private var combos: Any {
+		let sequence = { [controller] (pattern: [Controls.Buttons], sink: @escaping () -> Void) -> Disposable in
 			controller.$controls.signal.filter { $0.matchesSequence(pattern) }.observe { _ in
 				if self.state.pending == nil { sink() }
 			}
@@ -57,8 +62,8 @@ final class Model: ObservableObject {
 		]
 	}
 
-	private func controls(controller: Controller, transmitter: BLETransmitter) -> Any {
-		let mapControl = { controller.$controls.map($0).distinctUntilChanged() as Property<Bool> }
+	private var controlsMap: Any {
+		let mapControl = { [controller] in controller.$controls.map($0).distinctUntilChanged() as Property<Bool> }
 		let control = { ctrl, pressed in mapControl { $0.buttons.contains(ctrl) }.observe(pressed) }
 		let controlPressed = { ctrl, pressed in control(ctrl, Fn.fold(pressed, {})) }
 		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.fold(pressed, {})) }
@@ -74,12 +79,11 @@ final class Model: ObservableObject {
 			control(.cross, handleCross),
 			control(.circle, handleCircle),
 			control(.square, handleSquare),
-			control(.triangle, handleTriangle),
-			controlPressed(.scan, transmitter.scan)
+			control(.triangle, handleTriangle)
 		]
 	}
 
-	private var handleService: (BLETransmitter.Service?) -> Void {
+	private var handleService: (Transmitter.Service?) -> Void {
 		{ [unowned self, subscription = SerialDisposable()] service in
 			subscription.innerDisposable = service.map { service in
 				let pattern = $state.map(\.field.bleRepresentation).removeDuplicates().sink(receiveValue: service.setPattern)
@@ -164,7 +168,7 @@ final class Model: ObservableObject {
 				if pressed { state.bleControls.formSymmetricDifference(.changePattern) }
 			}
 		case .l: if pressed { state.patternIndex = 2 }
-		case .r: break
+		case .r: transmitter.scan()
 		case .lr: if pressed { writeToPattern(2) }
 		}
 	}
@@ -178,7 +182,7 @@ final class Model: ObservableObject {
 				state.toggleCursor()
 			}
 		case .l: if pressed { state.patternIndex = 3 }
-		case .r: break
+		case .r: transmitter.reconnect()
 		case .lr: if pressed { writeToPattern(3) }
 		}
 	}

@@ -124,7 +124,7 @@ final class Model: ObservableObject {
 				case .down: state.pattern.decEuclidean()
 				case .up: state.pattern.incEuclidean()
 				case .left: break
-				case .right: break
+				case .right: state.pattern.genRule90()
 				}
 			}
 		case .l: if pressed { state.patternIndex = 0 }

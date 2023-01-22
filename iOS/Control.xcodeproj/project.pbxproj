@@ -10,6 +10,7 @@
 		5F00C470297C33F700F7C3D5 /* State.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F00C46F297C33F700F7C3D5 /* State.swift */; };
 		5F00C472297D813F00F7C3D5 /* Euclidean.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F00C471297D813F00F7C3D5 /* Euclidean.swift */; };
 		5F00C474297D828000F7C3D5 /* BLEStructs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F00C473297D828000F7C3D5 /* BLEStructs.swift */; };
+		5F05890B297DD04F009CE8C3 /* CellularAutomaton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F05890A297DD04F009CE8C3 /* CellularAutomaton.swift */; };
 		5F16744E2668CC7B0055DF10 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F16744D2668CC7B0055DF10 /* Store.swift */; };
 		5F2E5A95296AE93A007E760A /* Field.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2E5A94296AE93A007E760A /* Field.swift */; };
 		5F71458F265980B000A73D7F /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F71458E265980B000A73D7F /* Model.swift */; };
@@ -34,6 +35,7 @@
 		5F00C46F297C33F700F7C3D5 /* State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = State.swift; sourceTree = "<group>"; };
 		5F00C471297D813F00F7C3D5 /* Euclidean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Euclidean.swift; sourceTree = "<group>"; };
 		5F00C473297D828000F7C3D5 /* BLEStructs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEStructs.swift; sourceTree = "<group>"; };
+		5F05890A297DD04F009CE8C3 /* CellularAutomaton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellularAutomaton.swift; sourceTree = "<group>"; };
 		5F16744D2668CC7B0055DF10 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		5F2E5A94296AE93A007E760A /* Field.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Field.swift; sourceTree = "<group>"; };
 		5F71458B26597DBA00A73D7F /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
@@ -107,6 +109,7 @@
 				5FF16EFB264304DF0045503F /* Utils.swift */,
 				5F16744D2668CC7B0055DF10 /* Store.swift */,
 				5F00C471297D813F00F7C3D5 /* Euclidean.swift */,
+				5F05890A297DD04F009CE8C3 /* CellularAutomaton.swift */,
 				5F00C473297D828000F7C3D5 /* BLEStructs.swift */,
 			);
 			path = Data;
@@ -248,6 +251,7 @@
 				5F00C474297D828000F7C3D5 /* BLEStructs.swift in Sources */,
 				5F00C470297C33F700F7C3D5 /* State.swift in Sources */,
 				5FF16EA22642FD090045503F /* ControlApp.swift in Sources */,
+				5F05890B297DD04F009CE8C3 /* CellularAutomaton.swift in Sources */,
 				5FF16F0126433BA20045503F /* Controller.swift in Sources */,
 				5F714599265A683A00A73D7F /* PatternView.swift in Sources */,
 				5FE9D270265437F300B217CA /* BLEUUID.swift in Sources */,

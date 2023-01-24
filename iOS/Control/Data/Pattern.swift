@@ -105,6 +105,16 @@ extension Pattern {
 		bits = ~bits & mask
 	}
 
+	mutating func double() {
+		if cols <= 4 {
+			cols *= 2
+			bits = bits | modify(self) { $0.shift(cols / 2, direction: .right) }.bits
+		} else if rows <= 4 {
+			rows *= 2
+			bits = bits | modify(self) { $0.shift(rows / 2, direction: .down) }.bits
+		}
+	}
+
 	func rowBits(_ row: Int) -> UInt64 {
 		(mask(row: row) & bits) >> (row * 8)
 	}

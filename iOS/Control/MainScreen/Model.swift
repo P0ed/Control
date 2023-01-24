@@ -123,7 +123,7 @@ final class Model: ObservableObject {
 				case .none: break
 				case .down: state.patternState.decEuclidean()
 				case .up: state.patternState.incEuclidean()
-				case .left: break
+				case .left: state.pattern.double()
 				case .right: state.pattern.genRule90()
 				}
 			}
@@ -216,11 +216,19 @@ final class Model: ObservableObject {
 				modify(&state.pendingPattern) { ptn in
 					let dx = Int(controls.leftStick.x * Float(ptn.cols - 1))
 					let dy = Int(controls.leftStick.y * Float(ptn.rows - 1))
-					if offset.x != dx || offset.y != dy {
-						ptn.shift(dx - offset.x, direction: .right)
-						ptn.shift(dy - offset.y, direction: .down)
+					let ddx = dx - offset.x
+					let ddy = dy - offset.y
+
+					if ddx != 0 || ddy != 0 {
+						if ddx != 0 { ptn.shift(ddx, direction: .right) }
+						if ddy != 0 { ptn.shift(ddy, direction: .up) }
 						offset = (dx, dy)
 					}
+				}
+			} else if offset.x != 0 || offset.y != 0 {
+				modify(&state.pendingPattern) { ptn in
+					if offset.x != 0 { ptn.shift(offset.x, direction: .left) }
+					if offset.y != 0 { ptn.shift(offset.y, direction: .down) }
 				}
 			}
 			if controls.leftTrigger > 1 / 255 || controls.rightTrigger > 1 / 255 {
@@ -229,13 +237,7 @@ final class Model: ObservableObject {
 				state.swing = swing
 			}
 		} else {
-			if offset.x != 0 || offset.y != 0 {
-				modify(&state.pendingPattern) { ptn in
-					ptn.shift(-offset.x, direction: .right)
-					ptn.shift(-offset.y, direction: .down)
-					offset = (0, 0)
-				}
-			}
+			offset = (0, 0)
 			swing = state.swing
 		}
 	}

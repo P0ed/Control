@@ -21,17 +21,22 @@ struct PatternView: View {
 				}
 			}
 		}
+		.frame(
+			width: Self.side,
+			height: Self.side,
+			alignment: .center
+		)
 	}
 
 	private static let spacing = 12 as Double
+	private static let side = 320 as Double
 
 	private var cellRadius: Double {
-		32 / Double(max(state.pattern.cols, state.pattern.rows))
+		32 / Double(max(state.pattern.cols, state.pattern.rows, 4))
 	}
-	private var cellWidth: Double {
-		(300 - Self.spacing * Double(state.pattern.cols - 1)) / Double(state.pattern.cols)
+	private static func cellDimension(_ numberOfItems: Int) -> Double {
+		(side - spacing * Double(numberOfItems - 1)) / Double(max(4, numberOfItems))
 	}
-	private var cellHeight: Double {
-		(300 - Self.spacing * Double(state.pattern.rows - 1)) / Double(state.pattern.rows)
-	}
+	private var cellWidth: Double { Self.cellDimension(state.pattern.cols) }
+	private var cellHeight: Double { Self.cellDimension(state.pattern.rows) }
 }

@@ -16,9 +16,9 @@ extension PatternState {
 		guard high != 0 else { return modify(pattern) { $0.bits = 0 } }
 
 		return modify(pattern) { ptn in
-			ptn[0] = true
-			(1..<pattern.count).forEach { i in
-				ptn[i / pattern.cols * 8 + i % pattern.cols] = (high * i) / pattern.count != (high * (i - 1)) / pattern.count
+			ptn[linear: 0] = true
+			(1..<ptn.count).forEach { i in
+				ptn[linear: i] = (high * i) / ptn.count != (high * (i - 1)) / ptn.count
 			}
 		}
 	}

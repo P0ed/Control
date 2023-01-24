@@ -21,6 +21,14 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 		get { bits & 1 << position != 0 }
 		set { bits = newValue ? bits | 1 << position : bits & ~(1 << position) }
 	}
+	subscript(linear index: Int) -> Bool {
+		get { self[mapIndex(index)] }
+		set { self[mapIndex(index)] = newValue }
+	}
+	private func mapIndex(_ index: Int) -> Int {
+		let index = (index + count) % count
+		return index / cols * 8 + index % cols
+	}
 }
 
 extension Pattern: CustomDebugStringConvertible {

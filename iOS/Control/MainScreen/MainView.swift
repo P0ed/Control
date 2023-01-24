@@ -24,7 +24,7 @@ struct MainView: View {
 
 	var pattern: some View {
 		PatternView(
-			pattern: model.state.pending?[model.state.patternIndex] ?? model.state.field[model.state.patternIndex],
+			state: model.state.pendingPatternState,
 			idx: model.state.cursor
 		)
 	}
@@ -38,16 +38,16 @@ struct MainView: View {
 				.font(.system(.largeTitle, design: .monospaced))
 				.foregroundColor(model.state.bleControls.contains(.changePattern) ? .clear : .text)
 
-			let dutyCycle = model.state.pattern.options.dutyCycle.fold(
+			let dutyCycle = model.state.patternState.options.dutyCycle.fold(
 				trig: "t", quarter: "q", half: "h", full: "f"
 			)
 			Text(dutyCycle)
 				.font(.system(.largeTitle, design: .monospaced))
 				.foregroundColor(.text)
 
-			Text("\(model.state.pattern.euclidean)")
+			Text("\(model.state.patternState.euclidean)")
 				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(model.state.pattern.euclidean == 0 ? .clear : .text)
+				.foregroundColor(model.state.patternState.euclidean == 0 ? .clear : .text)
 		}
 	}
 

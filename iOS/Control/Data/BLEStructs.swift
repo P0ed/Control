@@ -30,13 +30,13 @@ extension Field {
 	}
 }
 
-extension Pattern {
+extension PatternState {
 	var bleRepresentation: BLEPattern {
 		BLEPattern(
-			bits: isMuted ? 0 : (0..<rows)
-				.map { row in rowBits(row) << (cols * row) }
+			bits: isMuted ? 0 : (0..<pattern.rows)
+				.map { row in pattern.rowBits(row) << pattern.count }
 				.reduce(0, |),
-			count: UInt8(rows * cols),
+			count: UInt8(pattern.count),
 			options: UInt8(options.dutyCycle.rawValue)
 		)
 	}

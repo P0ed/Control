@@ -14,14 +14,21 @@ struct State {
 
 extension State {
 
-	var pendingPattern: Pattern {
-		get { pending?[patternIndex] ?? pattern }
-		set { (pending?[patternIndex] = newValue) ?? (pattern = newValue) }
+	var pendingPatternState: PatternState {
+		get { pending?[patternIndex] ?? patternState }
+		set { (pending?[patternIndex] = newValue) ?? (patternState = newValue) }
 	}
-
-	var pattern: Pattern {
+	var patternState: PatternState {
 		get { field[patternIndex] }
 		set { field[patternIndex] = newValue }
+	}
+	var pendingPattern: Pattern {
+		get { pendingPatternState.pattern }
+		set { pendingPatternState.pattern = newValue }
+	}
+	var pattern: Pattern {
+		get { patternState.pattern }
+		set { patternState.pattern = newValue }
 	}
 
 	mutating func toggleCursor() {

@@ -1,10 +1,10 @@
 import Foundation
 
 struct Field: Codable {
-	var a: Pattern = .empty
-	var b: Pattern = .empty
-	var c: Pattern = .empty
-	var d: Pattern = .empty
+	var a = PatternState()
+	var b = PatternState()
+	var c = PatternState()
+	var d = PatternState()
 }
 
 enum DutyCycle: Int, Codable { case trig, quarter, half, full }
@@ -26,7 +26,7 @@ struct PatternOptions: Codable {
 
 extension Field {
 
-	subscript(_ idx: Int) -> Pattern {
+	subscript(_ idx: Int) -> PatternState {
 		get {
 			switch idx % 4 {
 			case 0: return a
@@ -47,5 +47,5 @@ extension Field {
 		}
 	}
 
-	var all: [Pattern] { [a, b, c, d] }
+	var all: [PatternState] { [a, b, c, d] }
 }

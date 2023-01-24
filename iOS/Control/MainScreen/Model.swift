@@ -95,14 +95,14 @@ final class Model: ObservableObject {
 
 		switch controls.buttons.modifiers {
 		case .none: moveCursor(direction: direction)
-		case .l: state.pending = modify(field) { $0[state.patternIndex].modifySize(subtract: true, direction: direction) }
-		case .r: state.pending = modify(field) { $0[state.patternIndex].modifySize(subtract: false, direction: direction) }
-		case .lr: state.pending = modify(field) { $0[state.patternIndex].shift(direction: direction) }
+		case .l: state.pending = modify(field) { $0[state.patternIndex].pattern.modifySize(subtract: true, direction: direction) }
+		case .r: state.pending = modify(field) { $0[state.patternIndex].pattern.modifySize(subtract: false, direction: direction) }
+		case .lr: state.pending = modify(field) { $0[state.patternIndex].pattern.shift(direction: direction) }
 		}
 	}
 
 	private func moveCursor(direction: Direction) {
-		guard let idx = state.cursor, let pattern = state.pending?[state.patternIndex] else { return }
+		guard let idx = state.cursor, let pattern = state.pending?[state.patternIndex].pattern else { return }
 		switch direction {
 		case .up: state.cursor = ((8 * pattern.rows) + idx - 8) % (8 * pattern.rows)
 		case .right: state.cursor = (idx % 8 + 1) % pattern.cols + (idx / 8) * 8
@@ -116,13 +116,13 @@ final class Model: ObservableObject {
 		case .none:
 			if let field = state.pending {
 				if pressed, let idx = state.cursor {
-					state.pending = modify(field) { $0[state.patternIndex][idx].toggle() }
+					state.pending = modify(field) { $0[state.patternIndex].pattern[idx].toggle() }
 				}
 			} else if pressed {
 				switch controls.buttons.dPadDirection {
 				case .none: break
-				case .down: state.pattern.decEuclidean()
-				case .up: state.pattern.incEuclidean()
+				case .down: state.patternState.decEuclidean()
+				case .up: state.patternState.incEuclidean()
 				case .left: break
 				case .right: state.pattern.genRule90()
 				}
@@ -142,11 +142,11 @@ final class Model: ObservableObject {
 			} else {
 				if pressed {
 					switch controls.buttons.dPadDirection {
-					case .none: state.pattern.isMuted.toggle()
-					case .down: state.pattern.options.dutyCycle = .trig
-					case .left: state.pattern.options.dutyCycle = .quarter
-					case .right: state.pattern.options.dutyCycle = .half
-					case .up: state.pattern.options.dutyCycle = .full
+					case .none: state.patternState.isMuted.toggle()
+					case .down: state.patternState.options.dutyCycle = .trig
+					case .left: state.patternState.options.dutyCycle = .quarter
+					case .right: state.patternState.options.dutyCycle = .half
+					case .up: state.patternState.options.dutyCycle = .full
 					}
 				}
 			}
@@ -200,11 +200,10 @@ final class Model: ObservableObject {
 	}
 
 	private func writeToPattern(_ idx: Int) {
-
 		if let pending = state.pending {
 			state.pending = modify(pending) { $0[idx] = $0[state.patternIndex] }
 		} else {
-			state.field[idx] = state.pattern
+			state.field[idx].pattern = state.pattern
 		}
 	}
 

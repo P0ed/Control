@@ -1,14 +1,17 @@
 import Foundation
 import Fx
 
+struct PatternState: Codable {
+	var pattern: Pattern = .empty
+	var isMuted: Bool = false
+	var options: PatternOptions = .init()
+	var euclidean: Int = 0
+}
+
 struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	var rows: Int
 	var cols: Int
 	var bits: UInt64
-
-	var isMuted: Bool = false
-	var options: PatternOptions = .init()
-	var euclidean: Int = 0
 
 	var startIndex: Int { 0 }
 	var endIndex: Int { Int(rows * cols) }

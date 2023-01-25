@@ -36,7 +36,7 @@ struct MainView: View {
 				.foregroundColor(.text)
 			Text("*")
 				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(model.state.bleControls.contains(.changePattern) ? .clear : .text)
+				.foregroundColor(model.state.controls.contains(.changePattern) ? .clear : .text)
 
 			let dutyCycle = model.state.patternState.options.dutyCycle.fold(
 				trig: "t", quarter: "q", half: "h", full: "f"
@@ -53,16 +53,35 @@ struct MainView: View {
 
 	var global: some View {
 		VStack {
-			let bpmHidden = model.state.bpm == 0 || !model.state.bleControls.contains(.run)
+			let bpmHidden = model.state.bpm == 0 || !model.state.controls.contains(.run)
 			let swingHidden = bpmHidden || model.state.swing == 0
+
+			storedField
 
 			Text("\(String(format: "%.1f", model.state.bpm))")
 				.font(.system(.largeTitle, design: .monospaced))
 				.foregroundColor(bpmHidden ? .text.opacity(0.2) : .text)
 			Text("\(String(format: "%.0f%", model.state.swing * 50))")
 				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(swingHidden ? .clear : .text)
+				.foregroundColor(swingHidden ? .text.opacity(0.2) : .text)
 		}
+	}
+
+	var storedField: some View {
+		let l = model.controls.buttons.contains(.shiftLeft)
+		let r = model.controls.buttons.contains(.shiftRight)
+		let field = model.state.pending ?? (l ? model.state.field : r ? model.storedField : nil)
+		let side = (320 - 12 * 3) / 4 as Double
+
+		return HStack(spacing: 12) {
+			if let field = field {
+				PatternView(state: field[0], side: side)
+				PatternView(state: field[1], side: side)
+				PatternView(state: field[2], side: side)
+				PatternView(state: field[3], side: side)
+			}
+		}
+		.frame(height: side)
 	}
 }
 

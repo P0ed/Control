@@ -4,7 +4,7 @@ import Fx
 struct State {
 	var bpm: Float
 	var swing: Float = 0
-	var bleControls: BLEControls = [.changePattern]
+	var controls: BLEControls = [.changePattern]
 	var field: Field
 	var patternIndex: Int = 0
 	

@@ -10,11 +10,12 @@ final class Model: ObservableObject {
 	@IO(.store(key: "state", fallback: .init()))
 	private var store: StoredState
 
+	@Published private(set) var storedField: Field
 	@Published private(set) var state: State
 	@Published private(set) var controls = Controls()
 
-	@Published private(set) var isBLEConnected: Bool = false
-	@Published private(set) var isControllerConnected: Bool = false
+	@Published private(set) var isBLEConnected = false
+	@Published private(set) var isControllerConnected = false
 
 	private var lifetime: Any?
 
@@ -24,7 +25,9 @@ final class Model: ObservableObject {
 		self.transmitter = transmitter
 		self.controller = controller
 
-		state = _store.value.state
+		let state = _store.value.state
+		self.state = state
+		storedField = state.field
 
 		lifetime = [
 			$controls.sink(receiveValue: handleControls),
@@ -80,7 +83,7 @@ final class Model: ObservableObject {
 		{ [self, subscription = SerialDisposable()] service in
 			subscription.innerDisposable = service.map { service in
 				let pattern = $state.map(\.field.bleRepresentation).removeDuplicates().sink(receiveValue: service.setPattern)
-				let controls = $state.map(\.bleControls).removeDuplicates().sink(receiveValue: service.setControls)
+				let controls = $state.map(\.controls).removeDuplicates().sink(receiveValue: service.setControls)
 				let bpm = $state.map(\.bleClock).removeDuplicates().sink(receiveValue: service.setClock)
 
 				return ActionDisposable(
@@ -177,7 +180,7 @@ final class Model: ObservableObject {
 					runStop()
 				}
 			} else {
-				if pressed { state.bleControls.formSymmetricDifference(.changePattern) }
+				if pressed { state.controls.formSymmetricDifference(.changePattern) }
 			}
 		case .l: if pressed { state.patternIndex = 2 }
 		case .r: transmitter.scan()
@@ -257,11 +260,12 @@ final class Model: ObservableObject {
 	}
 
 	private func runStop() {
-		state.bleControls.formSymmetricDifference(.run)
+		state.controls.formSymmetricDifference(.run)
 	}
 
 	private func save() {
 		store.state = state
+		storedField = state.field
 	}
 
 	private func recall() {

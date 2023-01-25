@@ -17,7 +17,6 @@
 		5F714595265A646100A73D7F /* Pattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F714594265A646100A73D7F /* Pattern.swift */; };
 		5F714599265A683A00A73D7F /* PatternView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F714598265A683A00A73D7F /* PatternView.swift */; };
 		5FBC7C122666407400286A9B /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F71458B26597DBA00A73D7F /* GameController.framework */; };
-		5FBC7C172666409100286A9B /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FBC7C162666409100286A9B /* GameController.framework */; };
 		5FD6D72E265A81D0000B9801 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD6D72D265A81D0000B9801 /* Controls.swift */; };
 		5FE1D13E297AFA080023BAE6 /* Fx in Frameworks */ = {isa = PBXBuildFile; productRef = 5FE1D13D297AFA080023BAE6 /* Fx */; };
 		5FE9D270265437F300B217CA /* BLEUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE9D26F265437F300B217CA /* BLEUUID.swift */; };
@@ -43,7 +42,6 @@
 		5F714594265A646100A73D7F /* Pattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pattern.swift; sourceTree = "<group>"; };
 		5F714598265A683A00A73D7F /* PatternView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternView.swift; sourceTree = "<group>"; };
 		5FBC7C0926663EED00286A9B /* Control.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Control.entitlements; sourceTree = "<group>"; };
-		5FBC7C162666409100286A9B /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk/System/iOSSupport/System/Library/Frameworks/GameController.framework; sourceTree = DEVELOPER_DIR; };
 		5FD6D72D265A81D0000B9801 /* Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
 		5FE9D26F265437F300B217CA /* BLEUUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEUUID.swift; sourceTree = "<group>"; };
 		5FE9D2722654381C00B217CA /* BLEDelegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEDelegates.swift; sourceTree = "<group>"; };
@@ -63,7 +61,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5FBC7C172666409100286A9B /* GameController.framework in Frameworks */,
 				5FBC7C122666407400286A9B /* GameController.framework in Frameworks */,
 				5FE1D13E297AFA080023BAE6 /* Fx in Frameworks */,
 			);
@@ -85,7 +82,6 @@
 		5F71458A26597DB900A73D7F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				5FBC7C162666409100286A9B /* GameController.framework */,
 				5F71458B26597DBA00A73D7F /* GameController.framework */,
 			);
 			name = Frameworks;

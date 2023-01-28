@@ -1,20 +1,37 @@
 import Foundation
 import Fx
 
-struct State {
+struct State: Codable {
 	var bpm: Float
-	var swing: Float = 0
-	var patterns: Quad<PatternState>
+	var swing: Float
+	var banks: Quad<Quad<PatternState>>
 
-	var isPlaying = false
-	var changePattern = true
-	var patternIndex: Int = 0
+	var isPlaying: Bool
+	var changePattern: Bool
+	var sendMIDI: Bool
+	var patternIndex: Int
+	var bankIndex: Int
 	var pending: Quad<PatternState>?
 	var cursor: Int?
 }
 
 extension State {
 
+	static let empty = State(
+		bpm: 120,
+		swing: 0,
+		banks: .init(same: .init(same: .init())),
+		isPlaying: false,
+		changePattern: false,
+		sendMIDI: false,
+		patternIndex: 0,
+		bankIndex: 0
+	)
+
+	var patterns: Quad<PatternState> {
+		get { banks[bankIndex] }
+		set { banks[bankIndex] = newValue }
+	}
 	var pendingPatternState: PatternState {
 		get { pending?[patternIndex] ?? patternState }
 		set { (pending?[patternIndex] = newValue) ?? (patternState = newValue) }

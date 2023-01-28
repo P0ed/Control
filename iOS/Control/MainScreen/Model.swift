@@ -8,7 +8,7 @@ final class Model: ObservableObject {
 	private let controller: Controller
 
 	@IO(.store(key: "state", fallback: .empty))
-	private var store: Quad<StoredState>
+	private var store: State
 
 	@Published private(set) var stored: Quad<PatternState>
 	@Published private(set) var state: State
@@ -25,16 +25,16 @@ final class Model: ObservableObject {
 		self.transmitter = transmitter
 		self.controller = controller
 
-		let state = _store.value[0].state
-		self.state = state
-		stored = state.patterns
+		let stored = _store.value
+		self.state = stored
+		self.stored = stored.patterns
 
 		lifetime = [
 			$controls.sink(receiveValue: handleControls),
-			transmitter.$isConnected.observe { self.isBLEConnected = $0 },
-			controller.$isConnected.observe { self.isControllerConnected = $0 },
-			transmitter.$service.observe(handleService),
-			controller.$controls.observe { self.controls = $0 },
+			transmitter.$isConnected.observe(.main) { self.isBLEConnected = $0 },
+			controller.$isConnected.observe(.main) { self.isControllerConnected = $0 },
+			transmitter.$service.observe(.main, handleService),
+			controller.$controls.observe(.main) { self.controls = $0 },
 			controlsMap,
 			combos,
 			Timer.repeat(1 / 16, handleTimer)
@@ -82,28 +82,22 @@ final class Model: ObservableObject {
 	private var handleService: (Transmitter.Service?) -> Void {
 		{ [self, subscription = SerialDisposable()] service in
 			subscription.innerDisposable = service.map { service in
-				let pattern = $state.map { $0.patterns.map(\.bleRepresentation) }.removeDuplicates()
-					.sink(receiveValue: service.setPattern)
-				let controls = $state.map(\.bleControls).removeDuplicates()
-					.sink(receiveValue: service.setControls)
-				let bpm = $state.map(\.bleClock).removeDuplicates()
-					.sink(receiveValue: service.setClock)
-
-				return ActionDisposable(
-					action: [pattern, controls, bpm].map { $0.cancel }.reduce({}, •)
+				ActionDisposable(
+					action: $state.map(\.blePattern).removeDuplicates().sink(receiveValue: service.setPattern).cancel
+						• $state.map(\.bleControls).removeDuplicates().sink(receiveValue: service.setControls).cancel
 				)
 			}
 		}
 	}
 
 	private func handleDPad() {
-		guard let direction = controls.buttons.dPadDirection, let field = state.pending else { return }
+		guard let direction = controls.buttons.dPadDirection, let patterns = state.pending else { return }
 
 		switch controls.buttons.modifiers {
 		case .none: moveCursor(direction: direction)
-		case .l: state.pending = modify(field) { $0[state.patternIndex].pattern.modifySize(subtract: true, direction: direction) }
-		case .r: state.pending = modify(field) { $0[state.patternIndex].pattern.modifySize(subtract: false, direction: direction) }
-		case .lr: state.pending = modify(field) { $0[state.patternIndex].pattern.shift(direction: direction) }
+		case .l: state.pending = modify(patterns) { $0[state.patternIndex].pattern.modifySize(subtract: true, direction: direction) }
+		case .r: state.pending = modify(patterns) { $0[state.patternIndex].pattern.modifySize(subtract: false, direction: direction) }
+		case .lr: state.pending = modify(patterns) { $0[state.patternIndex].pattern.shift(direction: direction) }
 		}
 	}
 
@@ -186,7 +180,7 @@ final class Model: ObservableObject {
 				if pressed { state.changePattern.toggle() }
 			}
 		case .l: if pressed { state.patternIndex = 2 }
-		case .r: transmitter.scan()
+		case .r: if pressed { state.sendMIDI.toggle() }
 		case .lr: if pressed { writeToPattern(2) }
 		}
 	}
@@ -267,15 +261,11 @@ final class Model: ObservableObject {
 	}
 
 	private func save() {
-		store[0].state = state
+		store = state
 		stored = state.patterns
 	}
 
 	private func recall() {
-		modify(&state) { [store] in
-			$0.patterns = store[0].patterns
-			$0.bpm = store[0].bpm
-			$0.swing = store[0].swing
-		}
+		state = store
 	}
 }

@@ -1,23 +1,26 @@
 import Foundation
 import Fx
 
+struct BLEControls: Equatable {
+	var bpm: Float
+	var bits: Int16
+}
+
 struct BLEPattern: Equatable {
 	var bits: UInt64
 	var count: UInt8
 	var options: UInt8
 }
 
-extension BLEPattern: CustomDebugStringConvertible {
-	var debugDescription: String {
-		(0..<64).map { $0 < count ? (bits & 1 << $0 != 0 ? "x" : "o") : "-" }.joined()
-	}
+extension State {
+	var blePattern: Quad<BLEPattern> { patterns.map(\.blePattern) }
 }
 
 extension PatternState {
-	var bleRepresentation: BLEPattern {
+	var blePattern: BLEPattern {
 		BLEPattern(
 			bits: isMuted ? 0 : (0..<pattern.rows)
-				.map { row in pattern.rowBits(row) << pattern.count }
+				.map { row in pattern.rowBits(row) << (pattern.cols * row) }
 				.reduce(0, |),
 			count: UInt8(pattern.count),
 			options: UInt8(options.dutyCycle.rawValue)
@@ -25,32 +28,21 @@ extension PatternState {
 	}
 }
 
-struct BLEControls: OptionSet {
-	var rawValue: Int16
-
-	static let run = BLEControls(rawValue: 1 << 0)
-	static let reset = BLEControls(rawValue: 1 << 1)
-	static let changePattern = BLEControls(rawValue: 1 << 2)
-
-	mutating func set(_ control: BLEControls, pressed: Bool) {
-		if pressed { insert(control) } else { remove(control) }
-	}
-}
-
 extension State {
 	var bleControls: BLEControls {
-		modify([]) {
-			if isPlaying { $0.insert(.run) }
-			if changePattern { $0.insert(.changePattern) }
-		}
+		BLEControls(
+			bpm: bpm,
+			bits: modify(0) {
+				if isPlaying { $0 |= 1 << 4 }
+				if changePattern { $0 |= 1 << 6 }
+				if sendMIDI { $0 |= 1 << 7 }
+			}
+		)
 	}
 }
 
-struct BLEClock: Hashable {
-	var bpm: Float
-	var swing: Float
-}
-
-extension State {
-	var bleClock: BLEClock { BLEClock(bpm: bpm, swing: swing) }
+extension BLEPattern: CustomDebugStringConvertible {
+	var debugDescription: String {
+		(0..<64).map { $0 < count ? (bits & 1 << $0 != 0 ? "x" : "o") : "-" }.joined()
+	}
 }

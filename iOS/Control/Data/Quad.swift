@@ -8,7 +8,7 @@ struct Quad<Element>: MutableCollection, RandomAccessCollection {
 
 	var startIndex: Int { 0 }
 	var endIndex: Int { 4 }
-	func index(after i: Int) -> Int { (i + 1) % 4 }
+	func index(after i: Int) -> Int { i + 1 }
 
 	subscript(_ idx: Int) -> Element {
 		get {
@@ -44,3 +44,10 @@ extension Quad {
 extension Quad: Codable where Element: Codable {}
 extension Quad: Equatable where Element: Equatable {}
 extension Quad: Hashable where Element: Hashable {}
+
+extension Quad {
+	subscript(_ shape: Shape) -> Element {
+		get { self[shape.rawValue] }
+		set { self[shape.rawValue] = newValue }
+	}
+}

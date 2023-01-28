@@ -1,3 +1,5 @@
+#include "midi.h"
+
 bool isHigh(long long value, int bit) {
   return value & (1LL << bit);
 }
@@ -12,72 +14,65 @@ struct Pattern {
   bool isHighAtIndex(int idx) {
     switch (options) {
       case 0:
-      case 1: return isHigh(bits, (idx / 4) % (int)count) && (idx % 4) == 0;
-      case 2: return isHigh(bits, (idx / 4) % (int)count) && (idx / 2 % 2) == 0;
-      case 3: return isHigh(bits, (idx / 4) % (int)count);
+      case 1: return isHigh(bits, (idx / 6) % (int)count) && (idx % 6) == 0;
+      case 2: return isHigh(bits, (idx / 6) % (int)count) && (idx % 6 / 3) == 0;
+      case 3: return isHigh(bits, (idx / 6) % (int)count);
     }
   }
 };
 
 const struct Pattern Pattern::empty = {
   .bits = 0,
-  .count = 16
+  .count = 16,
+  .options = 0
 };
 
-struct Field {
+struct QuadPattern {
   Pattern patterns[4];
-
-  const static struct Field empty;
+  
+  const static struct QuadPattern empty;
 };
 
-const struct Field Field::empty = {
+const struct QuadPattern QuadPattern::empty = {
   .patterns = { Pattern::empty, Pattern::empty, Pattern::empty, Pattern::empty }
 };
 
 struct Controls {
+  float bpm;
   short bits;
 
-  bool isRunning() { return bits & Controls::run.bits; }
-  bool isReset() { return bits & Controls::reset.bits; }
-  bool isChangePattern() { return bits & Controls::changePattern.bits; }
-
-  const static struct Controls run;
-  const static struct Controls reset;
-  const static struct Controls changePattern;
-};
-
-const struct Controls Controls::run = {1 << 0};
-const struct Controls Controls::reset = {1 << 1};
-const struct Controls Controls::changePattern = {1 << 2};
-
-struct Clock {
-  float bpm;
-  float swing;
+  bool contains(int shape) { return bits & (1 << shape); }
+  bool isRunning() { return bits & 1 << 4; }
+  bool isReset() { return bits & 1 << 5; }
+  bool isChangePattern() { return bits & 1 << 6; }
+  bool isMIDI() { return bits & 1 << 7; }
 };
 
 struct State {
   bool isRunning;
   unsigned long nextTick;
-  Clock clock;
   Controls controls;
   int idx;
-  Field field;
-  Field pending;
+  QuadPattern quad;
+  QuadPattern pending;
 
   int trigs;
   unsigned long trigsLifetime;
 
+  bool midi;
+
   const static int maxIdx;
 
   bool isAtStartOf(int ptnIdx) {
-    return idx % 4 == 0 && (idx / 4) % field.patterns[ptnIdx].count == 0;
+    return idx % 6 == 0 && (idx / 6) % quad.patterns[ptnIdx].count == 0;
   }
 
   unsigned long oneTick() {
-    unsigned long regular = 1000000 * 60 / clock.bpm / 4 / 4;
-    unsigned long dt = regular * clock.swing / 2;
-    bool isEven = idx / 4 % 2 == 0;
-    return isEven ? regular + dt : regular - dt;
+    const unsigned long regular = 1000000 * 60 / controls.bpm / 4 / 6;
+    return regular;
+    // unsigned long dt = regular * controls.swing / 2;
+    // bool isEven = idx / 6 % 2 == 0;
+    // return isEven ? regular + dt : regular - dt;
   }
 
   bool shouldTick(unsigned long t) {
@@ -88,55 +83,63 @@ struct State {
   }
 
   int tick(unsigned long t) {
-    if (isAtStartOf(0)) field = pending;
+    if (isAtStartOf(0)) quad = pending;
     if (controls.isReset()) reset();
 
-    bool clock = (idx % 4) / 2 == 0;
-    int bits = 1 << 0 | clock << 1;
-    int tgs = 0;
+    bool clock = (idx % 6 / 2) == 0;
+    int bits = 1 << 4 | clock << 5;
+    trigs = 0;
     for (int i = 0; i < 4; i++) {
-      bool isHigh = field.patterns[i].isHighAtIndex(idx);
-      tgs |= (isHigh && field.patterns[i].options == 0) << (i + 2);
-      bits |= isHigh << (i + 2);
+      bool isHigh = quad.patterns[i].isHighAtIndex(idx);
+      trigs |= (isHigh && quad.patterns[i].options == 0) << i;
+      bits |= isHigh << i;
     }
 
-    trigs = tgs;
-    if (tgs) trigsLifetime = t + 15000;
+    if (trigs) trigsLifetime = t + 15000;
 
     nextTick += oneTick();
     idx = (idx + 1) % State::maxIdx;
+
+    MIDIClock();
 
     return bits;
   }
 
   int consumeTrigs() {
-    int t = trigs;
+    int tgs = trigs;
     trigs = 0;
-    return t;
+    return tgs;
   }
 
   void start(unsigned long t) {
     nextTick = t;
     isRunning = true;
+    MIDIStart();
+  }
+
+  void stop() {
+    isRunning = false;
+    reset();
+    MIDIStop();
   }
 
   void reset() {
-    isRunning = false;
     idx = 0;
-    trigs = 0;    
+    trigs = 0;
+    if (isRunning) MIDISetSPP(0);
   }
 };
 
 State state = {
   .isRunning = false,
   .nextTick = 0,
-  .clock = { .bpm = 0, .swing = 0 },
-  .controls = { 0 },
+  .controls = { .bpm = 0, .bits = 0 },
   .idx = 0,
-  .field = Field::empty,
-  .pending = Field::empty,
+  .quad = QuadPattern::empty,
+  .pending = QuadPattern::empty,
   .trigs = 0,
-  .trigsLifetime = 0
+  .trigsLifetime = 0,
+  .midi = false
 };
 
-const int State::maxIdx = 40320 << 5;
+const int State::maxIdx = 40320 * 8 * 6;

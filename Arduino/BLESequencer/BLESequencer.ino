@@ -2,31 +2,13 @@
 #include "ble.h"
 #include "nrf.h"
 
-int pins[6] = { 4, 5, 30, 29, 31, 2 };
-int ledPin = 13;
-
-void directWrite(int value) {
-  int clr = !isHigh(value, 1) << ledPin;
-  int set = isHigh(value, 1) << ledPin;
-  for (int i = 0; i < 6; i++) clr |= !isHigh(value, i) << pins[i];
-  for (int i = 0; i < 6; i++) set |= isHigh(value, i) << pins[i];
-  if (clr) NRF_P0->OUTCLR = clr;
-  if (set) NRF_P0->OUTSET = set;
-}
-
-void directClear(int value) {
-  int clr = isHigh(value, 1) << ledPin;
-  for (int i = 0; i < 6; i++) clr |= isHigh(value, i) << pins[i];
-  if (clr) NRF_P0->OUTCLR = clr;
-}
+static int pins[6] = { 4, 5, 30, 29, 31, 2 };
+static int ledPin = 13;
 
 void setup() {
-  int outputs = 1 << ledPin;
-  for (int i = 0; i < 6; i++) outputs |= 1 << pins[i];
-  NRF_P0->DIRSET = outputs;
+  setupPins();
 
   initBLE();
-  clockCharacteristic.setEventHandler(BLEWritten, didChangeClock);
   controlsCharacteristic.setEventHandler(BLEWritten, didChangeControls);
   patternCharacteristic.setEventHandler(BLEWritten, didChangePattern);
 }
@@ -36,31 +18,69 @@ void loop() {
   loopBLE();
 }
 
-void runClockIfNeeded(unsigned long t) {
-  if (state.controls.isRunning() && state.clock.bpm) run(t);
+static void runClockIfNeeded(unsigned long t) {
+  if (state.controls.isRunning() && state.controls.bpm) run(t);
   else if (state.isRunning && !state.controls.isRunning()) stop();
 }
 
-void run(unsigned long t) {
-  if (!state.isRunning) state.start(t);
+static void run(unsigned long t) {
+  if (!state.isRunning) start(t);
   if (state.shouldTick(t)) directWrite(state.tick(t));
   if (state.hasExpiredTrigs(t)) directClear(state.consumeTrigs());
 }
 
-void stop() {
-  state.reset();
+static void start(unsigned long t) {
+  bool midi = state.controls.isMIDI();
+  if (midi != state.midi) {
+    state.midi = midi;
+    if (midi) {
+      setupPins();
+      MIDISetup();
+    } else {
+      MIDIDeinit();
+      setupPins();
+    }
+  }
+  state.start(t);
+}
+
+static void stop() {
+  state.stop();
   directWrite(0);
 }
 
-void didChangeClock(BLEDevice central, BLECharacteristic characteristic) {
-  memcpy(&state.clock, (unsigned char *)characteristic.value(), characteristic.valueSize());
+static int setupPins() {
+  int activePins = 1 << ledPin;
+  int pinsCount = state.midi ? 5 : 6;
+  for (int i = 0; i < pinsCount; i++) activePins |= 1 << pins[i];
+
+  NRF_P0->DIRSET = activePins;
+  NRF_P0->DIRCLR = state.midi ? 1 << pins[5] : 0;
+  if (state.midi) NRF_P0->OUTSET = 1 << pins[4];
 }
 
-void didChangePattern(BLEDevice central, BLECharacteristic characteristic) {
+static void directWrite(int value) {
+  int clr = !isHigh(value, 5) << ledPin;
+  int set = isHigh(value, 5) << ledPin;
+  const int pinsCount = state.midi ? 4 : 5;
+  for (int i = 0; i < pinsCount; i++) clr |= !isHigh(value, i) << pins[i];
+  for (int i = 0; i < pinsCount; i++) set |= isHigh(value, i) << pins[i];
+  if (clr) NRF_P0->OUTCLR = clr;
+  if (set) NRF_P0->OUTSET = set;
+}
+
+static void directClear(int value) {
+  int clr = isHigh(value, 5) << ledPin;
+  const int pinsCount = state.midi ? 4 : 6;
+  for (int i = 0; i < pinsCount; i++) clr |= isHigh(value, i) << pins[i];
+  if (clr) NRF_P0->OUTCLR = clr;
+}
+
+static void didChangePattern(BLEDevice central, BLECharacteristic characteristic) {
   memcpy(&state.pending, (unsigned char *)characteristic.value(), characteristic.valueSize());
-  if (state.controls.isChangePattern()) state.field = state.pending;
+  if (state.controls.isChangePattern()) state.quad = state.pending;
 }
 
-void didChangeControls(BLEDevice central, BLECharacteristic characteristic) {
+static void didChangeControls(BLEDevice central, BLECharacteristic characteristic) {
   memcpy(&state.controls, (unsigned char *)characteristic.value(), characteristic.valueSize());
 }

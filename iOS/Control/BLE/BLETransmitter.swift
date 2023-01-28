@@ -58,7 +58,8 @@ final class Transmitter {
 		cmd.didConnect = { cm, p in
 			p.discoverServices(nil)
 		}
-		cmd.didDisconnect = { cm, p, e in
+		cmd.didDisconnect = { [_service] cm, p, e in
+			_service.value = nil
 			print(e as Any)
 		}
 
@@ -94,9 +95,6 @@ extension Transmitter.Service {
 		peripheral.writeValue(data, for: self[keyPath: characteristic], type: .withoutResponse)
 	}
 
-	func setClock(_ clock: BLEClock) {
-		write(value: clock, for: \.clockBPM)
-	}
 	func setPattern(_ pattern: Quad<BLEPattern>) {
 		write(value: pattern, for: \.pattern)
 	}

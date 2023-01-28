@@ -22,7 +22,7 @@ struct MainView: View {
 		}
 	}
 
-	var pattern: some View {
+	var pattern: PatternView {
 		PatternView(
 			state: model.state.pendingPatternState,
 			idx: model.state.cursor
@@ -61,6 +61,9 @@ struct MainView: View {
 			Text("\(String(format: "%.0f%", model.state.swing * 50))")
 				.font(.system(.largeTitle, design: .monospaced))
 				.foregroundColor(swingHidden ? .text.opacity(0.2) : .text)
+			Text("MIDI")
+				.font(.system(.body, design: .monospaced))
+				.foregroundColor(model.state.sendMIDI ? .text : .clear)
 		}
 	}
 

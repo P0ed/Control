@@ -1,13 +1,6 @@
 import Foundation
 import Fx
 
-struct PatternState: Codable {
-	var pattern: Pattern = .empty
-	var isMuted: Bool = false
-	var options: PatternOptions = .init()
-	var euclidean: Int = 0
-}
-
 struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	var rows: Int
 	var cols: Int
@@ -15,7 +8,7 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 
 	var startIndex: Int { 0 }
 	var endIndex: Int { Int(rows * cols) }
-	func index(after i: Int) -> Int { (i + 1) % (rows * cols) }
+	func index(after i: Int) -> Int { i + 1 }
 
 	subscript(position: Int) -> Bool {
 		get { bits & 1 << position != 0 }
@@ -28,18 +21,6 @@ struct Pattern: MutableCollection, RandomAccessCollection, Codable {
 	private func mapIndex(_ index: Int) -> Int {
 		let index = (index + count) % count
 		return index / cols * 8 + index % cols
-	}
-}
-
-extension Pattern: CustomDebugStringConvertible {
-	var debugDescription: String {
-		(0..<8).map { row in
-			(0..<8).map { col in
-				row < rows && col < cols ? "\(self[row * 8 + col] ? "x" : "o")" : "-"
-			}
-			.joined()
-		}
-		.joined(separator: "\n")
 	}
 }
 
@@ -143,19 +124,14 @@ extension Pattern {
 	static let lazerpresent = Pattern(rows: 4, cols: 8, bits: 0b0001_0001_0001_0001 | (0b0000_0100_1001_0001 << 16))
 }
 
-struct PatternOptions: Codable {
-	var dutyCycle: DutyCycle = .trig
-}
-
-enum DutyCycle: Int, Codable { case trig, quarter, half, full }
-
-extension DutyCycle {
-	func fold<A>(trig: @autoclosure () -> A, quarter: @autoclosure () -> A, half: @autoclosure () -> A, full: @autoclosure () -> A) -> A {
-		switch self {
-		case .trig: return trig()
-		case .quarter: return quarter()
-		case .half: return half()
-		case .full: return full()
+extension Pattern: CustomDebugStringConvertible {
+	var debugDescription: String {
+		(0..<8).map { row in
+			(0..<8).map { col in
+				row < rows && col < cols ? "\(self[row * 8 + col] ? "x" : "o")" : "-"
+			}
+			.joined()
 		}
+		.joined(separator: "\n")
 	}
 }

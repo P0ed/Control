@@ -33,3 +33,9 @@ extension Fn {
 		{ $0 ? `true`() : `false`() }
 	}
 }
+
+extension Property {
+	func observe(_ ctx: ExecutionContext, _ f: @escaping (A) -> Void) -> Disposable {
+		observe { x in ctx.run { f(x) } }
+	}
+}

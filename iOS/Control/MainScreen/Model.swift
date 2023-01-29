@@ -7,10 +7,10 @@ final class Model: ObservableObject {
 	private let transmitter: Transmitter
 	private let controller: Controller
 
-	@IO(.store(key: "state", fallback: .init()))
-	private var store: StoredState
+	@IO(.store(key: "state", fallback: .empty))
+	private var store: Quad<StoredState>
 
-	@Published private(set) var storedField: Field
+	@Published private(set) var stored: Quad<PatternState>
 	@Published private(set) var state: State
 	@Published private(set) var controls = Controls()
 
@@ -25,9 +25,9 @@ final class Model: ObservableObject {
 		self.transmitter = transmitter
 		self.controller = controller
 
-		let state = _store.value.state
+		let state = _store.value[0].state
 		self.state = state
-		storedField = state.field
+		stored = state.patterns
 
 		lifetime = [
 			$controls.sink(receiveValue: handleControls),
@@ -82,9 +82,12 @@ final class Model: ObservableObject {
 	private var handleService: (Transmitter.Service?) -> Void {
 		{ [self, subscription = SerialDisposable()] service in
 			subscription.innerDisposable = service.map { service in
-				let pattern = $state.map(\.field.bleRepresentation).removeDuplicates().sink(receiveValue: service.setPattern)
-				let controls = $state.map(\.controls).removeDuplicates().sink(receiveValue: service.setControls)
-				let bpm = $state.map(\.bleClock).removeDuplicates().sink(receiveValue: service.setClock)
+				let pattern = $state.map { $0.patterns.map(\.bleRepresentation) }.removeDuplicates()
+					.sink(receiveValue: service.setPattern)
+				let controls = $state.map(\.bleControls).removeDuplicates()
+					.sink(receiveValue: service.setControls)
+				let bpm = $state.map(\.bleClock).removeDuplicates()
+					.sink(receiveValue: service.setClock)
 
 				return ActionDisposable(
 					action: [pattern, controls, bpm].map { $0.cancel }.reduce({}, •)
@@ -180,7 +183,7 @@ final class Model: ObservableObject {
 					runStop()
 				}
 			} else {
-				if pressed { state.controls.formSymmetricDifference(.changePattern) }
+				if pressed { state.changePattern.toggle() }
 			}
 		case .l: if pressed { state.patternIndex = 2 }
 		case .r: transmitter.scan()
@@ -206,7 +209,7 @@ final class Model: ObservableObject {
 		if let pending = state.pending {
 			state.pending = modify(pending) { $0[idx] = $0[state.patternIndex] }
 		} else {
-			state.field[idx].pattern = state.pattern
+			state.patterns[idx].pattern = state.pattern
 		}
 	}
 
@@ -260,19 +263,19 @@ final class Model: ObservableObject {
 	}
 
 	private func runStop() {
-		state.controls.formSymmetricDifference(.run)
+		state.isPlaying.toggle()
 	}
 
 	private func save() {
-		store.state = state
-		storedField = state.field
+		store[0].state = state
+		stored = state.patterns
 	}
 
 	private func recall() {
 		modify(&state) { [store] in
-			$0.field = store.field
-			$0.bpm = store.bpm
-			$0.swing = store.swing
+			$0.patterns = store[0].patterns
+			$0.bpm = store[0].bpm
+			$0.swing = store[0].swing
 		}
 	}
 }

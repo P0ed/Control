@@ -97,19 +97,10 @@ extension Transmitter.Service {
 	func setClock(_ clock: BLEClock) {
 		write(value: clock, for: \.clockBPM)
 	}
-	func setPattern(_ pattern: BLEField) {
+	func setPattern(_ pattern: Quad<BLEPattern>) {
 		write(value: pattern, for: \.pattern)
 	}
 	func setControls(_ value: BLEControls) {
 		write(value: value, for: \.controls)
 	}
-}
-
-struct BLEClock: Hashable {
-	var bpm: Float
-	var swing: Float
-}
-
-extension State {
-	var bleClock: BLEClock { BLEClock(bpm: bpm, swing: swing) }
 }

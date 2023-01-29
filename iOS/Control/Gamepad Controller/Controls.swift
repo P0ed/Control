@@ -48,18 +48,6 @@ struct Controls {
 	}
 }
 
-struct BLEControls: OptionSet {
-	var rawValue: Int16
-
-	static let run = BLEControls(rawValue: 1 << 0)
-	static let reset = BLEControls(rawValue: 1 << 1)
-	static let changePattern = BLEControls(rawValue: 1 << 2)
-
-	mutating func set(_ control: BLEControls, pressed: Bool) {
-		if pressed { insert(control) } else { remove(control) }
-	}
-}
-
 extension Controls.Buttons {
 
 	var dPadDirection: Direction? {

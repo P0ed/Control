@@ -15,15 +15,30 @@ extension IO where A: Codable {
 }
 
 struct StoredState: Codable {
-	var bpm: Float = 120
-	var swing: Float = 0
-	var field: Field = Field()
+	var bpm: Float
+	var swing: Float
+	var patterns: Quad<PatternState>
 }
 
 extension StoredState {
 
-	var state: State {
-		get { State(bpm: bpm, swing: swing, field: field) }
-		set { bpm = newValue.bpm; swing = newValue.swing; field = newValue.field }
+	static var empty: StoredState {
+		StoredState(bpm: 120, swing: 0, patterns: .init(same: .init()))
 	}
+
+	var state: State {
+		get { State(bpm: bpm, swing: swing, patterns: patterns) }
+		set { bpm = newValue.bpm; swing = newValue.swing; patterns = newValue.patterns }
+	}
+}
+
+extension State {
+	var stored: StoredState {
+		get { StoredState(bpm: bpm, swing: swing, patterns: patterns) }
+		set { bpm = newValue.bpm; swing = newValue.swing; patterns = newValue.patterns }
+	}
+}
+
+extension Quad where Element == StoredState {
+	static var empty: Quad { Quad(same: .empty) }
 }

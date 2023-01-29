@@ -142,3 +142,20 @@ extension Pattern {
 	static let empty = Pattern(bits: 0 as UInt16)
 	static let lazerpresent = Pattern(rows: 4, cols: 8, bits: 0b0001_0001_0001_0001 | (0b0000_0100_1001_0001 << 16))
 }
+
+struct PatternOptions: Codable {
+	var dutyCycle: DutyCycle = .trig
+}
+
+enum DutyCycle: Int, Codable { case trig, quarter, half, full }
+
+extension DutyCycle {
+	func fold<A>(trig: @autoclosure () -> A, quarter: @autoclosure () -> A, half: @autoclosure () -> A, full: @autoclosure () -> A) -> A {
+		switch self {
+		case .trig: return trig()
+		case .quarter: return quarter()
+		case .half: return half()
+		case .full: return full()
+		}
+	}
+}

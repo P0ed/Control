@@ -34,9 +34,6 @@ struct MainView: View {
 			Text("\(model.state.patternIndex)")
 				.font(.system(.largeTitle, design: .monospaced))
 				.foregroundColor(.text)
-			Text("*")
-				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(model.state.controls.contains(.changePattern) ? .clear : .text)
 
 			let dutyCycle = model.state.patternState.options.dutyCycle.fold(
 				trig: "t", quarter: "q", half: "h", full: "f"
@@ -53,7 +50,7 @@ struct MainView: View {
 
 	var global: some View {
 		VStack {
-			let bpmHidden = model.state.bpm == 0 || !model.state.controls.contains(.run)
+			let bpmHidden = model.state.bpm == 0 || !model.state.isPlaying
 			let swingHidden = bpmHidden || model.state.swing == 0
 
 			storedField
@@ -70,15 +67,15 @@ struct MainView: View {
 	var storedField: some View {
 		let l = model.controls.buttons.contains(.shiftLeft)
 		let r = model.controls.buttons.contains(.shiftRight)
-		let field = model.state.pending ?? (l ? model.state.field : r ? model.storedField : nil)
+		let quad = model.state.pending ?? (l ? model.state.patterns : r ? model.stored : nil)
 		let side = (320 - 12 * 3) / 4 as Double
 
 		return HStack(spacing: 12) {
-			if let field = field {
-				PatternView(state: field[0], side: side)
-				PatternView(state: field[1], side: side)
-				PatternView(state: field[2], side: side)
-				PatternView(state: field[3], side: side)
+			if let quad = quad {
+				PatternView(state: quad[0], side: side)
+				PatternView(state: quad[1], side: side)
+				PatternView(state: quad[2], side: side)
+				PatternView(state: quad[3], side: side)
 			}
 		}
 		.frame(height: side)

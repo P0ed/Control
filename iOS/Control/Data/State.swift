@@ -4,11 +4,12 @@ import Fx
 struct State {
 	var bpm: Float
 	var swing: Float = 0
-	var controls: BLEControls = [.changePattern]
-	var field: Field
+	var patterns: Quad<PatternState>
+
+	var isPlaying = false
+	var changePattern = true
 	var patternIndex: Int = 0
-	
-	var pending: Field?
+	var pending: Quad<PatternState>?
 	var cursor: Int?
 }
 
@@ -19,8 +20,8 @@ extension State {
 		set { (pending?[patternIndex] = newValue) ?? (patternState = newValue) }
 	}
 	var patternState: PatternState {
-		get { field[patternIndex] }
-		set { field[patternIndex] = newValue }
+		get { patterns[patternIndex] }
+		set { patterns[patternIndex] = newValue }
 	}
 	var pendingPattern: Pattern {
 		get { pendingPatternState.pattern }
@@ -33,11 +34,11 @@ extension State {
 
 	mutating func toggleCursor() {
 		if let next = pending {
-			field = next
+			patterns = next
 			pending = nil
 			cursor = nil
 		} else {
-			pending = field
+			pending = patterns
 			cursor = 0
 		}
 	}

@@ -36,8 +36,8 @@ final class Model: ObservableObject {
 			transmitter.$service.observe(.main, handleService),
 			controller.$controls.observe(.main) { self.controls = $0 },
 			controlsMap,
-			combos,
-			Timer.repeat(1 / 16, handleTimer)
+			dPadMap,
+			combos
 		]
 
 		UIApplication.shared.isIdleTimerDisabled = true
@@ -66,17 +66,25 @@ final class Model: ObservableObject {
 	}
 
 	private var controlsMap: Any {
-		let mapControl = { [controller] in controller.$controls.map($0).distinctUntilChanged() as Property<Bool> }
-		let control = { ctrl, pressed in mapControl { $0.buttons.contains(ctrl) }.observe(pressed) }
-		let anyPressed = { controls, pressed in mapControl { !$0.buttons.intersection(controls).isEmpty }.observe(Fn.fold(pressed, {})) }
-
+		let control = { [controller] ctrl, pressed in
+			controller.$controls
+				.map { $0.buttons.contains(ctrl) }
+				.distinctUntilChanged()
+				.observe(pressed)
+		}
 		return [
-			anyPressed(.dPad, { self.isModified = true } • handleDPad),
 			control(.cross, handleCross),
 			control(.circle, handleCircle),
 			control(.square, handleSquare),
 			control(.triangle, handleTriangle)
 		]
+	}
+
+	private var dPadMap: Any {
+		controller.$controls
+			.map(\.buttons.dPadDirection)
+			.distinctUntilChanged()
+			.observe(sink • Fn.map({ self.isModified = true } • handleDPad))
 	}
 
 	private var handleService: (Transmitter.Service?) -> Void {
@@ -90,8 +98,8 @@ final class Model: ObservableObject {
 		}
 	}
 
-	private func handleDPad() {
-		guard let direction = controls.buttons.dPadDirection, let patterns = state.pending else { return }
+	private func handleDPad(_ direction: Direction) {
+		guard let patterns = state.pending else { return }
 
 		switch controls.buttons.modifiers {
 		case .none: moveCursor(direction: direction)
@@ -174,7 +182,7 @@ final class Model: ObservableObject {
 						}
 					}
 				} else if !isModified, controls.buttons.dPadDirection == nil {
-					runStop()
+					state.isPlaying.toggle()
 				}
 			} else {
 				if pressed { state.changePattern.toggle() }
@@ -240,24 +248,6 @@ final class Model: ObservableObject {
 			offset = (0, 0)
 			swing = state.swing
 		}
-	}
-
-	private func handleTimer() {
-		if controls.rightTrigger > 1 / 255 || controls.leftTrigger > 1 / 255 {
-			if controls.buttons.contains(.square) {
-				let f = { $0 * $0 as Float }
-				let diff = f(controls.rightTrigger) - f(controls.leftTrigger)
-				let newValue = (state.bpm + diff * 4).bpm
-				if newValue != state.bpm {
-					state.bpm = newValue
-					isModified = true
-				}
-			}
-		}
-	}
-
-	private func runStop() {
-		state.isPlaying.toggle()
 	}
 
 	private func save() {

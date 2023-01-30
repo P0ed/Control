@@ -36,10 +36,10 @@ struct MainView: View {
 				.foregroundColor(.text)
 
 			let dutyCycle = model.state.patternState.options.dutyCycle.fold(
-				trig: "t", quarter: "q", half: "h", full: "f"
+				trig: "trig", sixth: "sixth", half: "half", full: "full"
 			)
 			Text(dutyCycle)
-				.font(.system(.largeTitle, design: .monospaced))
+				.font(.system(.body, design: .monospaced))
 				.foregroundColor(.text)
 
 			Text("\(model.state.patternState.euclidean)")
@@ -50,20 +50,32 @@ struct MainView: View {
 
 	var global: some View {
 		VStack {
-			let bpmHidden = model.state.bpm == 0 || !model.state.isPlaying
-			let swingHidden = bpmHidden || model.state.swing == 0
-
 			storedField
-
 			Text("\(String(format: "%.1f", model.state.bpm))")
 				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(bpmHidden ? .text.opacity(0.2) : .text)
-			Text("\(String(format: "%.0f%", model.state.swing * 50))")
-				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(swingHidden ? .text.opacity(0.2) : .text)
-			Text("MIDI")
+				.foregroundColor(model.state.transport.fold(
+					stoped: const § .text.opacity(0.2),
+					paused: const § .text.opacity(0.4),
+					playing: const § .text
+				))
+			Text(model.state.sendMIDI ? "midi" : "analog")
 				.font(.system(.body, design: .monospaced))
-				.foregroundColor(model.state.sendMIDI ? .text : .clear)
+				.foregroundColor(.text)
+			Text(shapesString)
+				.font(.system(.body, design: .monospaced))
+				.foregroundColor(.text)
+		}
+	}
+
+	private var shapesString: String {
+		let chPattern = model.state.changePattern ? "*" : "•"
+		return model.state.shapes.isEmpty ? chPattern : model.state.shapes.reduce("") {
+			switch $1 {
+			case .cross: return $0 + "♥︎"
+			case .circle: return $0 + "♠︎"
+			case .square: return $0 + "♦︎"
+			case .triangle: return $0 + "♣︎"
+			}
 		}
 	}
 

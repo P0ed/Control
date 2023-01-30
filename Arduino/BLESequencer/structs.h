@@ -1,6 +1,6 @@
 #include "midi.h"
 
-bool isHigh(long long value, int bit) {
+static inline bool isHigh(long long value, int bit) {
   return value & (1LL << bit);
 }
 
@@ -41,6 +41,7 @@ struct Controls {
   float bpm;
   short bits;
 
+  int shapes() { return bits & 0xF; }
   bool contains(int shape) { return bits & (1 << shape); }
   bool isRunning() { return bits & 1 << 4; }
   bool isReset() { return bits & 1 << 5; }
@@ -52,6 +53,7 @@ struct State {
   bool isRunning;
   unsigned long nextTick;
   Controls controls;
+  short lastControls;
   int idx;
   QuadPattern quad;
   QuadPattern pending;
@@ -87,7 +89,7 @@ struct State {
     if (controls.isReset()) reset();
 
     bool clock = (idx % 6 / 2) == 0;
-    int bits = 1 << 4 | clock << 5;
+    int bits = 1 << 4 | clock << 5 | clock << 6;
     trigs = 0;
     for (int i = 0; i < 4; i++) {
       bool isHigh = quad.patterns[i].isHighAtIndex(idx);
@@ -133,7 +135,8 @@ struct State {
 State state = {
   .isRunning = false,
   .nextTick = 0,
-  .controls = { .bpm = 0, .bits = 0 },
+  .controls = {},
+  .lastControls = 0,
   .idx = 0,
   .quad = QuadPattern::empty,
   .pending = QuadPattern::empty,

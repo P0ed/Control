@@ -19,8 +19,6 @@ final class Model: ObservableObject {
 
 	private var lifetime: Any?
 
-	@IO private var isModified = true
-
 	init(transmitter: Transmitter, controller: Controller) {
 		self.transmitter = transmitter
 		self.controller = controller
@@ -84,7 +82,7 @@ final class Model: ObservableObject {
 		controller.$controls
 			.map(\.buttons.dPadDirection)
 			.distinctUntilChanged()
-			.observe(sink • Fn.map({ self.isModified = true } • handleDPad))
+			.observe(sink • Fn.map(handleDPad))
 	}
 
 	private var handleService: (Transmitter.Service?) -> Void {
@@ -120,90 +118,90 @@ final class Model: ObservableObject {
 	}
 
 	private func handleCross(_ pressed: Bool) {
+		guard pressed else { state.shapes.remove(.cross); return }
+
 		switch controls.buttons.modifiers {
 		case .none:
-			if let field = state.pending {
-				if pressed, let idx = state.cursor {
-					state.pending = modify(field) { $0[state.patternIndex].pattern[idx].toggle() }
+			if let pending = state.pending {
+				if let idx = state.cursor {
+					state.pending = modify(pending) { $0[state.patternIndex].pattern[idx].toggle() }
 				}
-			} else if pressed {
+			} else {
 				switch controls.buttons.dPadDirection {
-				case .none: break
+				case .none: state.shapes.insert(.cross)
 				case .down: state.patternState.decEuclidean()
 				case .up: state.patternState.incEuclidean()
 				case .left: state.pattern.double()
 				case .right: state.pattern.genRule90()
 				}
 			}
-		case .l: if pressed { state.patternIndex = 0 }
-		case .r: if pressed { save() }
-		case .lr: if pressed { writeToPattern(0) }
+		case .l: state.patternIndex = 0
+		case .r: break
+		case .lr: writeToPattern(0)
 		}
 	}
 
 	private func handleCircle(_ pressed: Bool) {
+		guard pressed else { state.shapes.remove(.circle); return }
+
 		switch controls.buttons.modifiers {
 		case .none:
 			if state.pending != nil {
 				state.pending = nil
 				state.cursor = nil
 			} else {
-				if pressed {
-					switch controls.buttons.dPadDirection {
-					case .none: state.patternState.isMuted.toggle()
-					case .down: state.patternState.options.dutyCycle = .trig
-					case .left: state.patternState.options.dutyCycle = .quarter
-					case .right: state.patternState.options.dutyCycle = .half
-					case .up: state.patternState.options.dutyCycle = .full
-					}
+				switch controls.buttons.dPadDirection {
+				case .none: state.shapes.insert(.circle)
+				case .down: state.patternState.options.dutyCycle = .trig
+				case .left: state.patternState.options.dutyCycle = .sixth
+				case .right: state.patternState.options.dutyCycle = .half
+				case .up: state.patternState.options.dutyCycle = .full
 				}
 			}
-		case .l: if pressed { state.patternIndex = 1 }
-		case .r: if pressed { recall() }
-		case .lr: if pressed { writeToPattern(1) }
+		case .l: state.patternIndex = 1
+		case .r: state.patternState.isMuted.toggle()
+		case .lr: writeToPattern(1)
 		}
 	}
 
 	private func handleSquare(_ pressed: Bool) {
+		guard pressed else { state.shapes.remove(.square); return }
+
 		switch controls.buttons.modifiers {
 		case .none:
 			if state.pending == nil {
-				if pressed {
-					isModified = false
-
-					if let direction = controls.buttons.dPadDirection {
-						let setBPM: ((Float) -> Float) -> Void = { [self] f in modify(&state.bpm) { $0 = f($0).bpm } }
-
-						switch direction {
-						case .down: setBPM { round($0 / 10) * 10 - 10 }
-						case .left: setBPM { $0 * 3 / 4 }
-						case .right: setBPM { $0 * 4 / 3 }
-						case .up: setBPM { round($0 / 10) * 10 + 10 }
-						}
+				if let direction = controls.buttons.dPadDirection {
+					switch direction {
+					case .down: state.bpm = \.bpm § round((state.bpm - 10) / 10) * 10
+					case .up: state.bpm = \.bpm § round((state.bpm + 10) / 10) * 10
+					case .left: state.stop()
+					case .right: state.play()
 					}
-				} else if !isModified, controls.buttons.dPadDirection == nil {
-					state.isPlaying.toggle()
+				} else {
+					state.shapes.insert(.square)
 				}
-			} else {
-				if pressed { state.changePattern.toggle() }
 			}
-		case .l: if pressed { state.patternIndex = 2 }
-		case .r: if pressed { state.sendMIDI.toggle() }
-		case .lr: if pressed { writeToPattern(2) }
+		case .l: state.patternIndex = 2
+		case .r: save()
+		case .lr: writeToPattern(2)
 		}
 	}
 
 	private func handleTriangle(_ pressed: Bool) {
+		guard pressed else { state.shapes.remove(.triangle); return }
+
 		switch controls.buttons.modifiers {
 		case .none:
-			if pressed {
-				isModified = false
-			} else if !isModified {
-				state.toggleCursor()
+			switch controls.buttons.dPadDirection {
+			case .none: if state.pending == nil { state.shapes.insert(.triangle) } else { state.toggleCursor() }
+			case .down: state.toggleCursor()
+			case .left: state.sendMIDI.toggle()
+			case .right: state.changePattern.toggle()
+			case .up: transmitter.reconnect()
 			}
-		case .l: if pressed { state.patternIndex = 3 }
-		case .r: transmitter.reconnect()
-		case .lr: if pressed { writeToPattern(3) }
+		case .l: state.patternIndex = 3
+		case .r: recall()
+		case .lr: writeToPattern(3)
 		}
 	}
 

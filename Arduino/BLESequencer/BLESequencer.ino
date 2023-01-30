@@ -2,8 +2,9 @@
 #include "ble.h"
 #include "nrf.h"
 
-static int pins[6] = { 4, 5, 30, 29, 31, 2 };
-static int ledPin = 13;
+static const int pinsCount = 7;
+static const int pinsMask = 0x7F;
+static const int pins[pinsCount] = { 4, 5, 30, 29, 31, 2, 13 };
 
 void setup() {
   setupPins();
@@ -14,8 +15,15 @@ void setup() {
 }
 
 void loop() {
+  handleControls();
   runClockIfNeeded(micros());
   loopBLE();
+}
+
+static void handleControls() {
+  if (state.controls.bits == state.lastControls) return;
+  directWrite(state.controls.shapes(), pinsMask ^ state.controls.shapes() ^ (state.lastControls & 0xF));
+  state.lastControls = state.controls.bits;
 }
 
 static void runClockIfNeeded(unsigned long t) {
@@ -25,8 +33,8 @@ static void runClockIfNeeded(unsigned long t) {
 
 static void run(unsigned long t) {
   if (!state.isRunning) start(t);
-  if (state.shouldTick(t)) directWrite(state.tick(t));
-  if (state.hasExpiredTrigs(t)) directClear(state.consumeTrigs());
+  if (state.shouldTick(t)) directWrite(state.tick(t), state.controls.shapes());
+  if (state.hasExpiredTrigs(t)) directClear(state.consumeTrigs(), 0);
 }
 
 static void start(unsigned long t) {
@@ -46,11 +54,11 @@ static void start(unsigned long t) {
 
 static void stop() {
   state.stop();
-  directWrite(0);
+  directClear(0x7F, 0);
 }
 
 static int setupPins() {
-  int activePins = 1 << ledPin;
+  int activePins = 1 << pins[6];
   int pinsCount = state.midi ? 5 : 6;
   for (int i = 0; i < pinsCount; i++) activePins |= 1 << pins[i];
 
@@ -59,22 +67,16 @@ static int setupPins() {
   if (state.midi) NRF_P0->OUTSET = 1 << pins[4];
 }
 
-static void directWrite(int value) {
-  int clr = !isHigh(value, 5) << ledPin;
-  int set = isHigh(value, 5) << ledPin;
-  const int pinsCount = state.midi ? 4 : 5;
-  for (int i = 0; i < pinsCount; i++) clr |= !isHigh(value, i) << pins[i];
-  for (int i = 0; i < pinsCount; i++) set |= isHigh(value, i) << pins[i];
-  if (clr) NRF_P0->OUTCLR = clr;
-  if (set) NRF_P0->OUTSET = set;
+static void setPins(int value, int excluding, volatile uint32_t *destination) {
+  int set = 0;
+  const int mask = pinsMask ^ (excluding | state.midi ? (1 << 4) | (1 << 5) : 0);
+  for (int i = 0; i < pinsCount; i++) set |= ((value & mask & (1 << i)) != 0) << pins[i];
+  if (set) *destination = set;
 }
 
-static void directClear(int value) {
-  int clr = isHigh(value, 5) << ledPin;
-  const int pinsCount = state.midi ? 4 : 6;
-  for (int i = 0; i < pinsCount; i++) clr |= isHigh(value, i) << pins[i];
-  if (clr) NRF_P0->OUTCLR = clr;
-}
+static void directSet(int value, int excluding) { setPins(value, excluding, &NRF_P0->OUTSET); }
+static void directClear(int value, int excluding) { setPins(value, excluding, &NRF_P0->OUTCLR); }
+static void directWrite(int value, int excluding) { directClear(~value, excluding); directSet(value, excluding); }
 
 static void didChangePattern(BLEDevice central, BLECharacteristic characteristic) {
   memcpy(&state.pending, (unsigned char *)characteristic.value(), characteristic.valueSize());
@@ -82,5 +84,6 @@ static void didChangePattern(BLEDevice central, BLECharacteristic characteristic
 }
 
 static void didChangeControls(BLEDevice central, BLECharacteristic characteristic) {
+  state.lastControls = state.controls.bits;
   memcpy(&state.controls, (unsigned char *)characteristic.value(), characteristic.valueSize());
 }

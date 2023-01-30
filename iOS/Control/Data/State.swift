@@ -6,7 +6,9 @@ struct State: Codable {
 	var swing: Float
 	var banks: Quad<Quad<PatternState>>
 
-	var isPlaying: Bool
+	var shapes: Set<Shape>
+	var transport: Transport
+	var reset: Bool
 	var changePattern: Bool
 	var sendMIDI: Bool
 	var patternIndex: Int
@@ -21,7 +23,9 @@ extension State {
 		bpm: 120,
 		swing: 0,
 		banks: .init(same: .init(same: .init())),
-		isPlaying: false,
+		shapes: [],
+		transport: .stopped,
+		reset: false,
 		changePattern: false,
 		sendMIDI: false,
 		patternIndex: 0,
@@ -57,6 +61,21 @@ extension State {
 		} else {
 			pending = patterns
 			cursor = 0
+		}
+	}
+
+	mutating func play() { transport = .playing }
+	mutating func stop() { transport = transport == .playing ? .paused : .stopped }
+}
+
+enum Transport: Codable { case stopped, paused, playing }
+
+extension Transport {
+	func fold<A>(stoped: () -> A, paused: () -> A, playing: () -> A) -> A {
+		switch self {
+		case .stopped: return stoped()
+		case .paused: return paused()
+		case .playing: return playing()
 		}
 	}
 }

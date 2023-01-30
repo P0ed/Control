@@ -6,7 +6,6 @@ final class Transmitter {
 
 	struct Service {
 		var peripheral: CBPeripheral
-		var clockBPM: CBCharacteristic
 		var pattern: CBCharacteristic
 		var controls: CBCharacteristic
 	}
@@ -84,7 +83,6 @@ extension Transmitter.Service {
 		}
 		self = try Transmitter.Service(
 			peripheral: peripheral,
-			clockBPM: find(.clockBPM),
 			pattern: find(.pattern),
 			controls: find(.controls)
 		)

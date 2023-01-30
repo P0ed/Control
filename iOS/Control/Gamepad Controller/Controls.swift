@@ -68,7 +68,7 @@ extension Controls.Buttons {
 	}
 }
 
-enum Shape: Int {
+enum Shape: Int, Codable {
 	case cross, circle, square, triangle
 }
 

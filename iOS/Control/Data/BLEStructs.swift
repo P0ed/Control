@@ -31,9 +31,10 @@ extension PatternState {
 extension State {
 	var bleControls: BLEControls {
 		BLEControls(
-			bpm: bpm,
-			bits: modify(0) {
-				if isPlaying { $0 |= 1 << 4 }
+			bpm: transport == .stopped ? 0 : bpm,
+			bits: modify(shapes.reduce(0) { $0 | 1 << $1.rawValue }) {
+				if transport == .playing { $0 |= 1 << 4 }
+				if reset { $0 |= 1 << 5 }
 				if changePattern { $0 |= 1 << 6 }
 				if sendMIDI { $0 |= 1 << 7 }
 			}

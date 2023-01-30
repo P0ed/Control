@@ -12,13 +12,13 @@ struct PatternOptions: Codable {
 	var dutyCycle: DutyCycle = .trig
 }
 
-enum DutyCycle: Int, Codable { case trig, quarter, half, full }
+enum DutyCycle: Int, Codable { case trig, sixth, half, full }
 
 extension DutyCycle {
-	func fold<A>(trig: @autoclosure () -> A, quarter: @autoclosure () -> A, half: @autoclosure () -> A, full: @autoclosure () -> A) -> A {
+	func fold<A>(trig: @autoclosure () -> A, sixth: @autoclosure () -> A, half: @autoclosure () -> A, full: @autoclosure () -> A) -> A {
 		switch self {
 		case .trig: return trig()
-		case .quarter: return quarter()
+		case .sixth: return sixth()
 		case .half: return half()
 		case .full: return full()
 		}

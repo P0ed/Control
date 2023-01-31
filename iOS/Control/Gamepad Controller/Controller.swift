@@ -13,6 +13,9 @@ final class Controller {
 	@MutableProperty
 	private(set) var controls = Controls()
 
+	@MutableProperty
+	private(set) var batteryLevel: Float = 0
+
 	init() {
 		let observers = [
 			NotificationCenter.default.addObserver(name: .GCControllerDidBecomeCurrent) { [_current] n in
@@ -23,15 +26,17 @@ final class Controller {
 			}
 		]
 		_isConnected = _current.map { $0 != nil }
-		let handlers = _current.observe { [_controls] controller in
+		let handlers = _current.observe { [_controls, _batteryLevel] controller in
 			guard let gamepad = controller?.extendedGamepad else { return }
 			_controls.value = Controls()
 
+			_batteryLevel.value = gamepad.controller?.battery?.batteryLevel ?? 0
+
 			gamepad.leftThumbstick.valueChangedHandler = { _, x, y in
-				_controls.value.leftStick = Controls.Thumbstick(x: x, y: y)
+				_controls.value.leftStick = Thumbstick(x: x, y: y)
 			}
 			gamepad.rightThumbstick.valueChangedHandler = { _, x, y in
-				_controls.value.rightStick = Controls.Thumbstick(x: x, y: y)
+				_controls.value.rightStick = Thumbstick(x: x, y: y)
 			}
 			gamepad.leftTrigger.valueChangedHandler = { _, value, _ in
 				_controls.value.leftTrigger = value
@@ -40,7 +45,7 @@ final class Controller {
 				_controls.value.rightTrigger = value
 			}
 
-			let mapControl: (GCControllerButtonInput, Controls.Buttons) -> Void = { button, control in
+			let mapControl: (GCControllerButtonInput, Buttons) -> Void = { button, control in
 				button.pressedChangedHandler = { _, _, pressed in
 					_controls.modify {
 						if pressed {

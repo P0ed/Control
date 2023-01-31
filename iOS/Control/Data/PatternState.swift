@@ -23,4 +23,7 @@ extension DutyCycle {
 		case .full: return full()
 		}
 	}
+	var string: String {
+		fold(trig: "trig", sixth: "sixth", half: "half", full: "full")
+	}
 }

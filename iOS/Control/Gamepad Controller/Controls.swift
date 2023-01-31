@@ -9,30 +9,6 @@ struct Controls {
 	var sequence = [] as [Buttons]
 	var lastPress: Date = .distantPast
 
-	struct Buttons: OptionSet {
-		var rawValue: Int16 = 0
-
-		static let up = Buttons(rawValue: 1 << 0)
-		static let down = Buttons(rawValue: 1 << 1)
-		static let left = Buttons(rawValue: 1 << 2)
-		static let right = Buttons(rawValue: 1 << 3)
-		static let shiftLeft = Buttons(rawValue: 1 << 4)
-		static let shiftRight = Buttons(rawValue: 1 << 5)
-		static let cross = Buttons(rawValue: 1 << 6)
-		static let circle = Buttons(rawValue: 1 << 7)
-		static let square = Buttons(rawValue: 1 << 8)
-		static let triangle = Buttons(rawValue: 1 << 9)
-
-		static let dPad = Buttons([.up, .down, .left, .right])
-	}
-
-	struct Thumbstick {
-		var x: Float
-		var y: Float
-
-		static let zero = Thumbstick(x: 0, y: 0)
-	}
-
 	var isValidSequence: Bool { -lastPress.timeIntervalSinceNow < 0.5 }
 
 	mutating func addToSequence(_ button: Buttons) {
@@ -48,7 +24,31 @@ struct Controls {
 	}
 }
 
-extension Controls.Buttons {
+struct Buttons: OptionSet {
+	var rawValue: Int16 = 0
+
+	static let up = Buttons(rawValue: 1 << 0)
+	static let down = Buttons(rawValue: 1 << 1)
+	static let left = Buttons(rawValue: 1 << 2)
+	static let right = Buttons(rawValue: 1 << 3)
+	static let shiftLeft = Buttons(rawValue: 1 << 4)
+	static let shiftRight = Buttons(rawValue: 1 << 5)
+	static let cross = Buttons(rawValue: 1 << 6)
+	static let circle = Buttons(rawValue: 1 << 7)
+	static let square = Buttons(rawValue: 1 << 8)
+	static let triangle = Buttons(rawValue: 1 << 9)
+
+	static let dPad = Buttons([.up, .down, .left, .right])
+}
+
+struct Thumbstick {
+	var x: Float
+	var y: Float
+
+	static let zero = Thumbstick(x: 0, y: 0)
+}
+
+extension Buttons {
 
 	var dPadDirection: Direction? {
 		if contains(.up) { return .up }
@@ -78,4 +78,48 @@ enum Direction {
 
 enum Modifiers {
 	case none, l, r, lr
+}
+
+extension Shape {
+	var symbol: String {
+		switch self {
+		case .cross: return "♥︎"
+		case .circle: return "♠︎"
+		case .square: return "♦︎"
+		case .triangle: return "♣︎"
+		}
+	}
+	var altSymbol: String {
+		switch self {
+		case .cross: return "♡"
+		case .circle: return "♤"
+		case .square: return "♢"
+		case .triangle: return "♧"
+		}
+	}
+}
+
+extension Thumbstick {
+	var shape: Shape? {
+		let c = sqrt(x * x + y * y)
+		if c > 0.6 {
+			let sin = y / c
+			let cos = x / c
+			let s = sqrt(2) / 2 as Float
+
+			if sin < -s {
+				return .cross
+			} else if cos > s {
+				return .circle
+			} else if cos < -s {
+				return .square
+			} else if sin > s {
+				return .triangle
+			} else {
+				return nil
+			}
+		} else {
+			return nil
+		}
+	}
 }

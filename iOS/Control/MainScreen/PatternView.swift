@@ -4,7 +4,9 @@ import Combine
 struct PatternView: View {
 	var state: PatternState
 	var idx = nil as Int?
-	var side = 320 as Double
+
+	var spacing: Double
+	var side: Double
 
 	var body: some View {
 		VStack(spacing: spacing) {
@@ -14,10 +16,11 @@ struct PatternView: View {
 						let isSelected = idx == row * 8 + col
 						let isOn = state.pattern[row * 8 + col]
 						let isMuted = state.isMuted
+						let side = cellDimension(max(state.pattern.rows, state.pattern.cols))
 
-						Color(isSelected ? .cellSelected : isOn ? (isMuted ? .cellMuted : .cellOn) : .cellOff)
-							.frame(width: cellDimension(state.pattern.cols), height: cellDimension(state.pattern.rows))
-							.cornerRadius(cellRadius)
+						Color(!isSelected ? isOn ? isMuted ? .cellMuted : .cellOn : .cellOff : .cellSelected)
+							.frame(width: side, height: side)
+							.cornerRadius(radius)
 					}
 				}
 			}
@@ -29,11 +32,23 @@ struct PatternView: View {
 		)
 	}
 
-	private var spacing: Double { side / 320 * 12 }
-
-	private var cellRadius: Double { side / 10 / Double(max(state.pattern.cols, state.pattern.rows, 4)) }
-
+	private var radius: Double { side / 10 / Double(max(state.pattern.cols, state.pattern.rows)) }
 	private func cellDimension(_ numberOfItems: Int) -> Double {
-		(side - spacing * Double(numberOfItems - 1)) / Double(max(4, numberOfItems))
+		(side - spacing * Double(numberOfItems - 1)) / Double(numberOfItems)
+	}
+}
+
+extension Quad: View where Element: View {
+	var body: some View {
+		VStack(spacing: 12) {
+			HStack(spacing: 12) {
+				self[2]
+				self[3]
+			}
+			HStack(spacing: 12) {
+				self[0]
+				self[1]
+			}
+		}
 	}
 }

@@ -10,12 +10,12 @@ final class Model: ObservableObject {
 	@IO(.store(key: "state", fallback: .empty))
 	private var store: State
 
-	@Published private(set) var stored: Quad<PatternState>
 	@Published private(set) var state: State
 	@Published private(set) var controls = Controls()
 
 	@Published private(set) var isBLEConnected = false
 	@Published private(set) var isControllerConnected = false
+	@Published private(set) var battery = 0 as Float
 
 	private var lifetime: Any?
 
@@ -23,14 +23,13 @@ final class Model: ObservableObject {
 		self.transmitter = transmitter
 		self.controller = controller
 
-		let stored = _store.value
-		self.state = stored
-		self.stored = stored.patterns
+		self.state = _store.value
 
 		lifetime = [
 			$controls.sink(receiveValue: handleControls),
 			transmitter.$isConnected.observe(.main) { self.isBLEConnected = $0 },
 			controller.$isConnected.observe(.main) { self.isControllerConnected = $0 },
+			controller.$batteryLevel.observe(.main) { self.battery = $0 },
 			transmitter.$service.observe(.main, handleService),
 			controller.$controls.observe(.main) { self.controls = $0 },
 			controlsMap,
@@ -42,7 +41,7 @@ final class Model: ObservableObject {
 	}
 
 	private var combos: Any {
-		let sequence = { [controller] (pattern: [Controls.Buttons], sink: @escaping () -> Void) -> Disposable in
+		let sequence = { [controller] (pattern: [Buttons], sink: @escaping () -> Void) -> Disposable in
 			controller.$controls.signal.filter { $0.matchesSequence(pattern) }.observe { _ in
 				if self.state.pending == nil { sink() }
 			}
@@ -136,7 +135,7 @@ final class Model: ObservableObject {
 				}
 			}
 		case .l: state.patternIndex = 0
-		case .r: break
+		case .r: controls.leftStick.shape.map { state.bankIndex = $0.rawValue }
 		case .lr: writeToPattern(0)
 		}
 	}
@@ -250,7 +249,6 @@ final class Model: ObservableObject {
 
 	private func save() {
 		store = state
-		stored = state.patterns
 	}
 
 	private func recall() {

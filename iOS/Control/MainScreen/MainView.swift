@@ -5,13 +5,17 @@ import Fx
 struct MainView: View {
 	@ObservedObject var model: Model
 
+	var state: State { model.state }
+	var controls: Controls { model.controls }
+
 	var body: some View {
 		ZStack {
-			Color(model.color).ignoresSafeArea()
+			model.color
+				.ignoresSafeArea()
 			VStack {
 				Spacer()
 				Spacer()
-				global
+				globalStatus
 				Spacer()
 				pattern
 				Spacer()
@@ -22,78 +26,90 @@ struct MainView: View {
 		}
 	}
 
-	var pattern: PatternView {
-		PatternView(
-			state: model.state.pendingPatternState,
-			idx: model.state.cursor
-		)
+	var globalStatus: some View {
+		VStack(alignment: .leading, spacing: 6) {
+			HStack(alignment: .top) {
+				Text("bpm: \(String(format: "%.1f", state.bpm))")
+					.font(.system(.largeTitle, design: .monospaced))
+					.foregroundColor(state.transport.fold(
+						stoped: const § .text.opacity(0.2),
+						paused: const § .text.opacity(0.4),
+						playing: const § .text
+					))
+					.frame(maxWidth: .infinity, alignment: .leading)
+				Text("⚡︎\(String(format: "%.0f", model.battery * 100))%")
+					.font(.system(.body, design: .monospaced))
+					.foregroundColor(.text)
+			}
+			Text("bank: \(state.bankIndex)")
+				.font(.system(.title2, design: .monospaced))
+				.foregroundColor(.text)
+			Text("transport: \(state.sendMIDI ? "midi" : "analog")")
+				.font(.system(.body, design: .monospaced))
+				.foregroundColor(.text)
+			Text(state.statusString)
+				.font(.system(.title, design: .monospaced))
+				.foregroundColor(.text)
+		}
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.padding(.horizontal)
+	}
+
+	@ViewBuilder var pattern: some View {
+		let l = controls.buttons.contains(.shiftLeft)
+		let r = controls.buttons.contains(.shiftRight)
+		let bankIdx = controls.leftStick.shape?.rawValue ?? state.bankIndex
+		let quad = l ? state.pending ?? state.patterns : r ? state.banks[bankIdx] : nil
+		let sp = 12 as Double
+		let side = (360 - sp) / 2 as Double
+
+		if let quad = quad {
+			quad.map { PatternView(state: $0, spacing: 12, side: side) }
+		} else {
+			PatternView(
+				state: state.pendingPatternState,
+				idx: state.cursor,
+				spacing: 12,
+				side: 360
+			)
+		}
 	}
 
 	var patternStatus: some View {
-		VStack {
-			Text("\(model.state.patternIndex)")
-				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(.text)
+		VStack(alignment: .leading, spacing: 6) {
+			HStack {
+				let ls = controls.leftStick.shape
+				let rs = controls.rightStick.shape
 
-			let dutyCycle = model.state.patternState.options.dutyCycle.fold(
-				trig: "trig", sixth: "sixth", half: "half", full: "full"
-			)
-			Text(dutyCycle)
-				.font(.system(.body, design: .monospaced))
-				.foregroundColor(.text)
-
-			Text("\(model.state.patternState.euclidean)")
-				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(model.state.patternState.euclidean == 0 ? .clear : .text)
-		}
-	}
-
-	var global: some View {
-		VStack {
-			storedField
-			Text("\(String(format: "%.1f", model.state.bpm))")
-				.font(.system(.largeTitle, design: .monospaced))
-				.foregroundColor(model.state.transport.fold(
-					stoped: const § .text.opacity(0.2),
-					paused: const § .text.opacity(0.4),
-					playing: const § .text
-				))
-			Text(model.state.sendMIDI ? "midi" : "analog")
-				.font(.system(.body, design: .monospaced))
-				.foregroundColor(.text)
-			Text(shapesString)
-				.font(.system(.body, design: .monospaced))
-				.foregroundColor(.text)
-		}
-	}
-
-	private var shapesString: String {
-		let chPattern = model.state.changePattern ? "*" : "•"
-		return model.state.shapes.isEmpty ? chPattern : model.state.shapes.reduce("") {
-			switch $1 {
-			case .cross: return $0 + "♥︎"
-			case .circle: return $0 + "♠︎"
-			case .square: return $0 + "♦︎"
-			case .triangle: return $0 + "♣︎"
+				Text("pattern: \(state.patternIndex)")
+					.font(.system(.largeTitle, design: .monospaced))
+					.foregroundColor(.text)
+					.frame(maxWidth: .infinity, alignment: .leading)
+				Text((ls ?? .cross).altSymbol)
+					.font(.system(.largeTitle, design: .monospaced))
+					.foregroundColor(ls == nil ? .clear : .text)
+				Text((rs ?? .cross).altSymbol)
+					.font(.system(.largeTitle, design: .monospaced))
+					.foregroundColor(rs == nil ? .clear : .text)
 			}
+
+
+			Text(state.patternState.options.dutyCycle.string)
+				.font(.system(.headline, design: .monospaced))
+				.foregroundColor(.text)
+
+			Text("euclidean: \(state.patternState.euclidean)")
+				.font(.system(.headline, design: .monospaced))
+				.foregroundColor(state.patternState.euclidean == 0 ? .clear : .text)
 		}
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.padding(.horizontal)
 	}
+}
 
-	var storedField: some View {
-		let l = model.controls.buttons.contains(.shiftLeft)
-		let r = model.controls.buttons.contains(.shiftRight)
-		let quad = model.state.pending ?? (l ? model.state.patterns : r ? model.stored : nil)
-		let side = (320 - 12 * 3) / 4 as Double
-
-		return HStack(spacing: 12) {
-			if let quad = quad {
-				PatternView(state: quad[0], side: side)
-				PatternView(state: quad[1], side: side)
-				PatternView(state: quad[2], side: side)
-				PatternView(state: quad[3], side: side)
-			}
-		}
-		.frame(height: side)
+private extension State {
+	var statusString: String {
+		shapes.isEmpty ? changePattern ? "*" : "•" : shapes.map(\.symbol).reduce("", +)
 	}
 }
 

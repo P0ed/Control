@@ -42,7 +42,6 @@ struct Controls {
   short bits;
 
   int shapes() { return bits & 0xF; }
-  bool contains(int shape) { return bits & (1 << shape); }
   bool isRunning() { return bits & 1 << 4; }
   bool isReset() { return bits & 1 << 5; }
   bool isChangePattern() { return bits & 1 << 6; }
@@ -53,7 +52,7 @@ struct State {
   bool isRunning;
   unsigned long nextTick;
   Controls controls;
-  short lastControls;
+  short changedControls;
   int idx;
   QuadPattern quad;
   QuadPattern pending;
@@ -70,11 +69,7 @@ struct State {
   }
 
   unsigned long oneTick() {
-    const unsigned long regular = 1000000 * 60 / controls.bpm / 4 / 6;
-    return regular;
-    // unsigned long dt = regular * controls.swing / 2;
-    // bool isEven = idx / 6 % 2 == 0;
-    // return isEven ? regular + dt : regular - dt;
+    return 1000000 * 60 / controls.bpm / 4 / 6;
   }
 
   bool shouldTick(unsigned long t) {
@@ -136,7 +131,7 @@ State state = {
   .isRunning = false,
   .nextTick = 0,
   .controls = {},
-  .lastControls = 0,
+  .changedControls = 0,
   .idx = 0,
   .quad = QuadPattern::empty,
   .pending = QuadPattern::empty,

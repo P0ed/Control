@@ -32,7 +32,7 @@ extension State {
 	var bleControls: BLEControls {
 		BLEControls(
 			bpm: transport == .stopped ? 0 : bpm,
-			bits: modify(shapes.reduce(0) { $0 | 1 << $1.rawValue }) {
+			bits: modify(shapes.map { 1 << $0.rawValue }.reduce(0, |)) {
 				if transport == .playing { $0 |= 1 << 4 }
 				if reset { $0 |= 1 << 5 }
 				if changePattern { $0 |= 1 << 6 }

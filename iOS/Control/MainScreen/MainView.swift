@@ -10,11 +10,9 @@ struct MainView: View {
 
 	var body: some View {
 		ZStack {
-			model.color
-				.ignoresSafeArea()
+			Color.base.ignoresSafeArea()
 			VStack {
-				Spacer()
-				Spacer()
+				Spacer(minLength: 40)
 				globalStatus
 				Spacer()
 				pattern
@@ -27,49 +25,47 @@ struct MainView: View {
 	}
 
 	var globalStatus: some View {
-		VStack(alignment: .leading, spacing: 6) {
-			HStack(alignment: .top) {
-				Text("bpm: \(String(format: "%.1f", state.bpm))")
-					.font(.system(.largeTitle, design: .monospaced))
-					.foregroundColor(state.transport.fold(
-						stoped: const § .text.opacity(0.2),
-						paused: const § .text.opacity(0.4),
-						playing: const § .text
-					))
-					.frame(maxWidth: .infinity, alignment: .leading)
-				Text("⚡︎\(String(format: "%.0f", model.battery * 100))%")
-					.font(.system(.body, design: .monospaced))
-					.foregroundColor(.text)
+		HStack(alignment: .top) {
+			VStack(alignment: .leading, spacing: 6) {
+				bpmLine
+				line(model.patternString, style: .title)
+				line("transport: \(state.sendMIDI ? "midi" : "analog")", style: .body)
+				line(model.statusString, style: .largeTitle)
 			}
-			Text("bank: \(state.bankIndex)")
-				.font(.system(.title2, design: .monospaced))
-				.foregroundColor(.text)
-			Text("transport: \(state.sendMIDI ? "midi" : "analog")")
-				.font(.system(.body, design: .monospaced))
-				.foregroundColor(.text)
-			Text(state.statusString)
-				.font(.system(.title, design: .monospaced))
-				.foregroundColor(.text)
+			.frame(maxWidth: .infinity, alignment: .leading)
+
+			HStack {
+				if model.isBLEConnected {
+					line("☮︎", style: .title2)
+				}
+				if let battery = model.controllerBattery {
+					HStack(spacing: 1) {
+						line("⚡︎", style: .title2)
+						line("\(String(format: "%.0f", battery * 100))", style: .body)
+					}
+				}
+			}
+			.padding(.top, 4)
 		}
 		.frame(maxWidth: .infinity, alignment: .leading)
 		.padding(.horizontal)
 	}
 
 	@ViewBuilder var pattern: some View {
-		let l = controls.buttons.contains(.shiftLeft)
-		let r = controls.buttons.contains(.shiftRight)
-		let bankIdx = controls.leftStick.shape?.rawValue ?? state.bankIndex
-		let quad = l ? state.pending ?? state.patterns : r ? state.banks[bankIdx] : nil
-		let sp = 12 as Double
-		let side = (360 - sp) / 2 as Double
+		let bnkIdx = controls.leftStick.shape?.rawValue ?? state.bankIndex
+		let ptnIdx = controls.rightStick.shape?.rawValue ?? state.patternIndex
 
-		if let quad = quad {
-			quad.map { PatternView(state: $0, spacing: 12, side: side) }
+		let sp = 12 as Double
+		let side = 360 as Double
+		let halfSide = (side - sp) / 2
+
+		if controls.buttons.contains([.l2, .r2]) {
+			state.banks[bnkIdx].map { PatternView(state: $0, spacing: sp, side: halfSide) }
 		} else {
 			PatternView(
-				state: state.pendingPatternState,
+				state: (state.pending ?? state.banks[bnkIdx])[ptnIdx],
 				idx: state.cursor,
-				spacing: 12,
+				spacing: sp,
 				side: 360
 			)
 		}
@@ -77,44 +73,52 @@ struct MainView: View {
 
 	var patternStatus: some View {
 		VStack(alignment: .leading, spacing: 6) {
-			HStack {
-				let ls = controls.leftStick.shape
-				let rs = controls.rightStick.shape
-
-				Text("pattern: \(state.patternIndex)")
-					.font(.system(.largeTitle, design: .monospaced))
-					.foregroundColor(.text)
-					.frame(maxWidth: .infinity, alignment: .leading)
-				Text((ls ?? .cross).altSymbol)
-					.font(.system(.largeTitle, design: .monospaced))
-					.foregroundColor(ls == nil ? .clear : .text)
-				Text((rs ?? .cross).altSymbol)
-					.font(.system(.largeTitle, design: .monospaced))
-					.foregroundColor(rs == nil ? .clear : .text)
-			}
-
-
-			Text(state.patternState.options.dutyCycle.string)
-				.font(.system(.headline, design: .monospaced))
-				.foregroundColor(.text)
-
-			Text("euclidean: \(state.patternState.euclidean)")
-				.font(.system(.headline, design: .monospaced))
-				.foregroundColor(state.patternState.euclidean == 0 ? .clear : .text)
+			line(model.optionsString, style: .body)
+			line(model.functionString, style: .body)
 		}
 		.frame(maxWidth: .infinity, alignment: .leading)
 		.padding(.horizontal)
 	}
-}
 
-private extension State {
-	var statusString: String {
-		shapes.isEmpty ? changePattern ? "*" : "•" : shapes.map(\.symbol).reduce("", +)
+	private var bpmLine: Text {
+		Text("bpm: \(String(format: "%.1f", state.bpm))")
+			.font(.system(.largeTitle, design: .monospaced))
+			.foregroundColor(state.transport.fold(
+				stoped: const § .text.opacity(0.2),
+				paused: const § .text.opacity(0.4),
+				playing: const § .text
+			))
+	}
+
+	private func line(_ text: String, style: Font.TextStyle) -> Text {
+		Text(text)
+			.font(.system(style, design: .monospaced))
+			.foregroundColor(.text)
 	}
 }
 
 extension Model {
-	var color: Color {
-		isControllerConnected ? isBLEConnected ? .base : .bleDisconnected : .controllerDisconnected
+
+	var patternString: String {
+		let x = controls.leftStick.shape?.altSymbol ?? Shape(state.bankIndex).symbol
+		let y = controls.rightStick.shape?.altSymbol ?? Shape(state.patternIndex).symbol
+		return "pattern: \(x)\(y)"
+	}
+	var statusString: String {
+		if state.shapes.isEmpty {
+			return state.flipFlop ? "•" : state.changePattern ? "⚛" : "*"
+		} else {
+			return state.shapes.map(\.symbol).reduce("", +)
+		}
+	}
+	var optionsString: String {
+		"duty cycle: \(state.patternState.options.dutyCycle.string)"
+	}
+	var functionString: String {
+		if state.patternState.euclidean != 0 {
+			return "euclidean: \(state.patternState.euclidean)"
+		} else {
+			return ""
+		}
 	}
 }

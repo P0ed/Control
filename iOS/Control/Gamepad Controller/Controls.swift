@@ -1,6 +1,6 @@
 import Foundation
 
-struct Controls {
+struct Controls: Hashable {
 	var leftStick = Thumbstick.zero
 	var rightStick = Thumbstick.zero
 	var leftTrigger = 0 as Float
@@ -24,24 +24,30 @@ struct Controls {
 	}
 }
 
-struct Buttons: OptionSet {
-	var rawValue: Int16 = 0
+struct Buttons: OptionSet, Hashable {
+	var rawValue: Int = 0
 
 	static let up = Buttons(rawValue: 1 << 0)
 	static let down = Buttons(rawValue: 1 << 1)
 	static let left = Buttons(rawValue: 1 << 2)
 	static let right = Buttons(rawValue: 1 << 3)
-	static let shiftLeft = Buttons(rawValue: 1 << 4)
-	static let shiftRight = Buttons(rawValue: 1 << 5)
-	static let cross = Buttons(rawValue: 1 << 6)
-	static let circle = Buttons(rawValue: 1 << 7)
-	static let square = Buttons(rawValue: 1 << 8)
-	static let triangle = Buttons(rawValue: 1 << 9)
 
-	static let dPad = Buttons([.up, .down, .left, .right])
+	static let cross = Buttons(rawValue: 1 << 4)
+	static let circle = Buttons(rawValue: 1 << 5)
+	static let square = Buttons(rawValue: 1 << 6)
+	static let triangle = Buttons(rawValue: 1 << 7)
+
+	static let l1 = Buttons(rawValue: 1 << 8)
+	static let r1 = Buttons(rawValue: 1 << 9)
+	static let l2 = Buttons(rawValue: 1 << 10)
+	static let r2 = Buttons(rawValue: 1 << 11)
+
+	static let dPad = Buttons([up, down, left, right])
+	static let shapes = Buttons([cross, circle, square, triangle])
+	static let modifiers = Buttons([l1, r1, l2, r2])
 }
 
-struct Thumbstick {
+struct Thumbstick: Hashable {
 	var x: Float
 	var y: Float
 
@@ -59,28 +65,22 @@ extension Buttons {
 	}
 
 	var modifiers: Modifiers {
-		switch (contains(.shiftLeft), contains(.shiftRight)) {
-		case (false, false): return .none
-		case (true, false): return .l
-		case (false, true): return .r
-		case (true, true): return .lr
-		}
+		Modifiers(rawValue: (rawValue >> 8) & 0xF)
 	}
 }
 
-enum Shape: Int, Codable {
-	case cross, circle, square, triangle
-}
+enum Direction: Hashable { case up, right, down, left }
+enum Shape: Int, Hashable, Codable { case cross, circle, square, triangle }
+enum Modifier: Int, Hashable { case l1, r1, l2, r2 }
 
-enum Direction {
-	case up, right, down, left
-}
-
-enum Modifiers {
-	case none, l, r, lr
+struct Modifiers: OptionSet {
+	var rawValue: Int
 }
 
 extension Shape {
+
+	init(_ idx: Int) { self = Shape(rawValue: idx % 4) ?? .cross }
+
 	var symbol: String {
 		switch self {
 		case .cross: return "♥︎"
@@ -122,4 +122,13 @@ extension Thumbstick {
 			return nil
 		}
 	}
+}
+
+extension Modifiers {
+	static let l1 = Modifiers(.l1)
+	static let r1 = Modifiers(.r1)
+	static let l2 = Modifiers(.l2)
+	static let r2 = Modifiers(.r2)
+
+	init(_ modifier: Modifier) { self = Modifiers(rawValue: 1 << modifier.rawValue) }
 }

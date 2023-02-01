@@ -7,16 +7,23 @@ final class Controller {
 	private var current: GCController? = GCController.controllers().first
 	private let lifetime: Cancellable
 
-	@Property
-	var isConnected: Bool
-
 	@MutableProperty
 	private(set) var controls = Controls()
 
-	@MutableProperty
-	private(set) var batteryLevel: Float = 0
+	@Property var isConnected: Bool
+	@Property var batteryLevel: Float?
 
 	init() {
+		_isConnected = _current.map { $0 != nil }
+
+		_batteryLevel = _current.flatMap { ctrl in
+			ctrl.flatMap(\.battery).map { battery in
+				Property(value: battery.batteryLevel, signal: Signal { sink in
+					Timer.repeat(20, sink • { battery.batteryLevel })
+				})
+			} ?? .const(nil)
+		}
+
 		let observers = [
 			NotificationCenter.default.addObserver(name: .GCControllerDidBecomeCurrent) { [_current] n in
 				_current.value = n.object as? GCController
@@ -25,12 +32,9 @@ final class Controller {
 				_current.value = nil
 			}
 		]
-		_isConnected = _current.map { $0 != nil }
-		let handlers = _current.observe { [_controls, _batteryLevel] controller in
+		let handlers = _current.observe { [_controls] controller in
 			guard let gamepad = controller?.extendedGamepad else { return }
 			_controls.value = Controls()
-
-			_batteryLevel.value = gamepad.controller?.battery?.batteryLevel ?? 0
 
 			gamepad.leftThumbstick.valueChangedHandler = { _, x, y in
 				_controls.value.leftStick = Thumbstick(x: x, y: y)
@@ -45,8 +49,8 @@ final class Controller {
 				_controls.value.rightTrigger = value
 			}
 
-			let mapControl: (GCControllerButtonInput, Buttons) -> Void = { button, control in
-				button.pressedChangedHandler = { _, _, pressed in
+			let mapControl: (GCControllerButtonInput?, Buttons) -> Void = { button, control in
+				button?.pressedChangedHandler = { _, _, pressed in
 					_controls.modify {
 						if pressed {
 							$0.buttons.insert(control)
@@ -58,16 +62,18 @@ final class Controller {
 				}
 			}
 
-			mapControl(gamepad.buttonA, .cross)
-			mapControl(gamepad.buttonB, .circle)
 			mapControl(gamepad.dpad.up, .up)
 			mapControl(gamepad.dpad.down, .down)
 			mapControl(gamepad.dpad.left, .left)
 			mapControl(gamepad.dpad.right, .right)
-			mapControl(gamepad.leftShoulder, .shiftLeft)
-			mapControl(gamepad.rightShoulder, .shiftRight)
+			mapControl(gamepad.buttonA, .cross)
+			mapControl(gamepad.buttonB, .circle)
 			mapControl(gamepad.buttonX, .square)
 			mapControl(gamepad.buttonY, .triangle)
+			mapControl(gamepad.leftShoulder, .l1)
+			mapControl(gamepad.rightShoulder, .r1)
+			mapControl(gamepad.leftTrigger, .l2)
+			mapControl(gamepad.rightTrigger, .r2)
 		}
 
 		lifetime = AnyCancellable { capture([observers, handlers]) }

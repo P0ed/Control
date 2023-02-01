@@ -13,6 +13,7 @@ struct State: Codable {
 	var sendMIDI: Bool
 	var patternIndex: Int
 	var bankIndex: Int
+	var flipFlop: Bool
 	var pending: Quad<PatternState>?
 	var cursor: Int?
 }
@@ -29,7 +30,8 @@ extension State {
 		changePattern: false,
 		sendMIDI: false,
 		patternIndex: 0,
-		bankIndex: 0
+		bankIndex: 0,
+		flipFlop: false
 	)
 
 	var patterns: Quad<PatternState> {

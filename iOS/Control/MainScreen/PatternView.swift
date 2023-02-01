@@ -16,9 +16,10 @@ struct PatternView: View {
 						let isSelected = idx == row * 8 + col
 						let isOn = state.pattern[row * 8 + col]
 						let isMuted = state.isMuted
-						let side = cellDimension(max(state.pattern.rows, state.pattern.cols))
+						let side = cellSide
 
-						Color(!isSelected ? isOn ? isMuted ? .cellMuted : .cellOn : .cellOff : .cellSelected)
+						Color(isOn ? isMuted ? .cellMuted : .cellOn : .cellOff)
+							.brightness(isSelected ? 0.3 : 0)
 							.frame(width: side, height: side)
 							.cornerRadius(radius)
 					}
@@ -32,10 +33,9 @@ struct PatternView: View {
 		)
 	}
 
-	private var radius: Double { side / 10 / Double(max(state.pattern.cols, state.pattern.rows)) }
-	private func cellDimension(_ numberOfItems: Int) -> Double {
-		(side - spacing * Double(numberOfItems - 1)) / Double(numberOfItems)
-	}
+	private var maxDimension: Int { max(state.pattern.rows, state.pattern.cols) }
+	private var radius: Double { side / 10 / Double(maxDimension) }
+	private var cellSide: Double { (side - spacing * Double(maxDimension - 1)) / Double(maxDimension) }
 }
 
 extension Quad: View where Element: View {
@@ -51,4 +51,10 @@ extension Quad: View where Element: View {
 			}
 		}
 	}
+}
+
+extension Color {
+	static let cellOff = Color(white: 0.11, opacity: 0.9)
+	static let cellOn = Color(white: 0.69, opacity: 0.9)
+	static let cellMuted = Color(white: 0.43, opacity: 0.9)
 }

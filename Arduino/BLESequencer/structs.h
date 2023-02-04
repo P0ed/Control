@@ -1,8 +1,6 @@
 #include "midi.h"
 
-static inline bool isHigh(long long value, int bit) {
-  return value & (1LL << bit);
-}
+static inline bool isHigh(long long value, int bit) { return value & (1LL << bit); }
 
 struct Pattern {
   long long bits;

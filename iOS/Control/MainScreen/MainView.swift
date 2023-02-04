@@ -83,10 +83,8 @@ struct MainView: View {
 	private var bpmLine: Text {
 		Text("bpm: \(String(format: "%.1f", state.bpm))")
 			.font(.system(.largeTitle, design: .monospaced))
-			.foregroundColor(state.transport.fold(
-				stoped: const § .text.opacity(0.2),
-				paused: const § .text.opacity(0.4),
-				playing: const § .text
+			.foregroundColor(.text.opacity(
+				state.transport.fold(stoped: 0.2, paused: 0.4, playing: 1)
 			))
 	}
 

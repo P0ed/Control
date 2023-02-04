@@ -1,10 +1,13 @@
 #include "structs.h"
 #include "ble.h"
 #include "nrf.h"
+#include "mbed.h"
 
 static const int pinsCount = 7;
 static const int pinsMask = 0x7F;
 static const int pins[pinsCount] = { 4, 5, 30, 29, 31, 2, 13 };
+
+mbed::PwmOut *a0_pwm = new mbed::PwmOut(digitalPinToPinName(A0));
 
 void setup() {
   setupPins();
@@ -60,7 +63,8 @@ static void stop() {
 static int setupPins() {
   int activePins = 1 << pins[6];
   int pinsCount = state.midi ? 5 : 6;
-  for (int i = 0; i < pinsCount; i++) activePins |= 1 << pins[i];
+  // WARNING! i = 0
+  for (int i = 1; i < pinsCount; i++) activePins |= 1 << pins[i];
 
   NRF_P0->DIRSET = activePins;
   NRF_P0->DIRCLR = state.midi ? 1 << pins[5] : 0;
@@ -70,7 +74,8 @@ static int setupPins() {
 static void setPins(int value, int excluding, volatile uint32_t *destination) {
   int set = 0;
   const int mask = pinsMask ^ (excluding | (state.midi ? (1 << 4) | (1 << 5) : 0));
-  for (int i = 0; i < pinsCount; i++) set |= ((value & mask & (1 << i)) != 0) << pins[i];
+  value = value & mask;
+  for (int i = 0; i < pinsCount; i++) set |= !!(value & (1 << i)) << pins[i];
   if (set) *destination = set;
 }
 

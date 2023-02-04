@@ -73,7 +73,7 @@ extension State {
 enum Transport: Codable { case stopped, paused, playing }
 
 extension Transport {
-	func fold<A>(stoped: () -> A, paused: () -> A, playing: () -> A) -> A {
+	func fold<A>(stoped: @autoclosure () -> A, paused: @autoclosure () -> A, playing: @autoclosure () -> A) -> A {
 		switch self {
 		case .stopped: return stoped()
 		case .paused: return paused()

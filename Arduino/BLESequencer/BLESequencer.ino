@@ -7,10 +7,13 @@ static const int pinsCount = 7;
 static const int pinsMask = 0x7F;
 static const int pins[pinsCount] = { 4, 5, 30, 29, 31, 2, 13 };
 
-mbed::PwmOut *a0_pwm = new mbed::PwmOut(digitalPinToPinName(A0));
+mbed::PwmOut *a0_pwm;
 
 void setup() {
   setupPins();
+
+  a0_pwm = new mbed::PwmOut(digitalPinToPinName(A0));
+  a0_pwm->write(0.5);
 
   initBLE();
   controlsCharacteristic.setEventHandler(BLEWritten, didChangeControls);
@@ -36,7 +39,7 @@ static void runClockIfNeeded(unsigned long t) {
 
 static void run(unsigned long t) {
   if (!state.isRunning) start(t);
-  if (state.shouldTick(t)) directWrite(state.tick(t), state.controls.shapes());
+  if (state.shouldTick(t)) tick(t);
   if (state.hasExpiredTrigs(t)) directClear(state.consumeTrigs(), state.controls.shapes());
 }
 
@@ -53,6 +56,19 @@ static void start(unsigned long t) {
     }
   }
   state.start(t);
+}
+
+static void tick(unsigned long t) {
+  const int pins = state.tick(t);
+  directWrite(pins, state.controls.shapes());
+
+  const int idx = state.idx / 6 % 48;
+  const float interval = pow(2, idx / 24.0);
+  if (state.idx % 18 == 0) setFreq(220.0 * interval);
+}
+
+static void setFreq(float hz) {
+  a0_pwm->period_us(1000000 / hz);
 }
 
 static void stop() {
@@ -75,7 +91,8 @@ static void setPins(int value, int excluding, volatile uint32_t *destination) {
   int set = 0;
   const int mask = pinsMask ^ (excluding | (state.midi ? (1 << 4) | (1 << 5) : 0));
   value = value & mask;
-  for (int i = 0; i < pinsCount; i++) set |= !!(value & (1 << i)) << pins[i];
+  // WARNING! i = 0
+  for (int i = 1; i < pinsCount; i++) set |= !!(value & (1 << i)) << pins[i];
   if (set) *destination = set;
 }
 

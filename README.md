@@ -17,7 +17,6 @@ Control is a sophisticated sequencing system that combines hardware and software
 - **BLE Connectivity**: Wireless communication with iOS app
 - **Real-time Clock**: Precise timing control with configurable BPM
 - **7-Pin GPIO Control**: Direct hardware gate outputs
-- **PWM Audio Output**: Frequency generation on analog pin A0
 
 ### iOS App
 - **Wireless Control**: BLE connection to Arduino hardware
@@ -48,9 +47,7 @@ Control is a sophisticated sequencing system that combines hardware and software
 
 - Arduino Nano 33 BLE
 - iOS device (iPhone/iPad) with iOS 14.0+
-- Optional: Game controller (MFi compatible)
-- 7 GPIO pins for gate outputs (pins 4, 5, 30, 29, 31, 2, 13)
-- PWM output on pin A0 for audio frequency
+- Gamepad
 
 ## Installation
 
